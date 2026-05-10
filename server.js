@@ -54,6 +54,40 @@ const rounds = [
       "We remain committed to transparency after deleting the dashboard.",
     ],
   },
+  {
+    type: "text",
+    title: "Logo Sketch",
+    prompt: "Describe your company's logo in one sentence.",
+    seconds: 40,
+    placeholder: "Ex: A skull wearing a tie, drinking coffee",
+    fallback: [
+      "A flaming trash can with angel wings",
+      "A broken heart made of credit cards",
+      "A wolf in sheep's clothing, but the sheep is on fire",
+    ],
+  },
+  {
+    type: "text",
+    title: "Emotional Pitch",
+    prompt: "What feeling does this company evoke?",
+    seconds: 30,
+    placeholder: "Ex: Existential dread mixed with false hope",
+    fallback: [
+      "The warm embrace of impending bankruptcy",
+      "Nostalgia for a future that never existed",
+      "The thrill of regret before it happens",
+    ],
+  },
+  {
+    type: "combo",
+    title: "Feature Mashup",
+    prompt: "Combine two features into one terrible product.",
+    seconds: 32,
+    columns: [
+      ["Self-destruct button", "Auto-pilot", "Voice control", "Hologram display"],
+      ["Time machine", "Mind reader", "Weather changer", "Invisibility cloak"],
+    ],
+  },
 ];
 
 const events = [
@@ -72,6 +106,17 @@ const botAnswers = {
     "The mascot acted alone, except for the roadmap.",
     "We are pausing harm until the next funding round.",
   ],
+  "Logo Sketch": [
+    "A crying clown juggling chainsaws",
+    "A diamond ring made of barbed wire",
+    "A smiling sun with vampire teeth",
+  ],
+  "Emotional Pitch": [
+    "The bittersweet taste of borrowed time",
+    "Hopeful despair in a gilded cage",
+    "Warm fuzzies from a cactus hug",
+  ],
+  "Feature Mashup": ["self-destruct time machine", "voice control mind reader", "auto-pilot invisibility cloak"],
 };
 
 function allowCors(res) {
@@ -274,7 +319,7 @@ function openVote(room) {
 }
 
 function vote(room, voterId, targetId) {
-  if (room.phase !== "vote" || !room.submissions[targetId]) return;
+  if (room.phase !== "vote" || !room.submissions[targetId] || voterId === targetId) return;
   room.votes[voterId] = targetId;
   const active = activePlayers(room);
   if (Object.keys(room.votes).length >= Math.max(1, active.length)) finishVoting(room);
@@ -368,9 +413,11 @@ async function handleApi(req, res, pathname) {
         if (body.name) player.name = String(body.name || player.name).slice(0, 18);
       }
       if (!player) {
-        player = { id: body.playerId || makeId("p"), name: String(body.name || "Anonymous Founder").slice(0, 18), connected: true, bot: false };
+        if (!body.name) return json(res, 400, { error: "Name is required to join" });
+        player = { id: body.playerId || makeId("p"), name: String(body.name).slice(0, 18), connected: true, bot: false };
         room.players.push(player);
         room.scores[player.id] = room.scores[player.id] || 0;
+        if (!room.hostId && !player.bot) room.hostId = player.id;
       }
       broadcast(room);
       return json(res, 200, { room: publicRoom(room), playerId: player.id });
@@ -378,7 +425,7 @@ async function handleApi(req, res, pathname) {
 
     if (req.method === "POST" && route === "action") {
       const body = await readJson(req);
-      const isHost = body.clientId === room.hostId;
+      const isHost = body.clientId === room.hostId && (!body.clientId.startsWith("host") || room.players.length === 0);
       if (body.type === "start" && isHost) startShow(room);
       if (body.type === "submit") submit(room, body.playerId, body.answer);
       if (body.type === "openVote" && isHost) openVote(room);
