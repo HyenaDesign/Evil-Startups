@@ -38,6 +38,9 @@ async function init() {
   bindStaticEvents();
   const params = new URLSearchParams(location.search);
   client.apiBase = (window.EVIL_API_BASE || params.get("api") || "").trim().replace(/\/+$/, "");
+  if (!client.apiBase && !["localhost", "127.0.0.1"].includes(location.hostname)) {
+    client.apiBase = "https://evil-startups.onrender.com";
+  }
   const roomCode = params.get("room");
   if (roomCode) {
     client.role = "player";
