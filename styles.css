@@ -265,9 +265,9 @@ button:active {
 
 .lobby-screen {
   grid-template-columns: minmax(260px, 0.82fr) minmax(360px, 1.18fr);
-  align-items: center;
+  align-items: flex-start;
   gap: clamp(16px, 3vw, 34px);
-  padding: clamp(16px, 3.5vw, 42px);
+  padding: clamp(12px, 2vw, 24px);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(255, 238, 193, 0.9)),
     repeating-linear-gradient(0deg, transparent 0 30px, rgba(21, 16, 25, 0.05) 30px 34px);
@@ -275,7 +275,7 @@ button:active {
 
 .mascot-wrap {
   position: relative;
-  min-height: min(52vh, 390px);
+  min-height: min(35vh, 280px);
   display: grid;
   place-items: center;
 }
@@ -382,8 +382,10 @@ button:active {
 .lobby-copy {
   display: grid;
   grid-template-rows: auto auto auto auto minmax(44px, auto) auto auto;
-  max-height: 100%;
+  max-height: calc(100vh - 140px);
   min-height: 0;
+  overflow-y: auto;
+  padding-right: 8px;
 }
 
 .mode-panel {
@@ -480,9 +482,39 @@ button:active {
   font-weight: 1000;
 }
 
+.join-card .join-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
 .join-card span {
   padding: 5px 10px;
   border-radius: 999px;
+  background: white;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+.join-card .join-qr {
+  display: none;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.join-card .join-qr.is-visible {
+  display: block;
+}
+
+.join-card .join-qr img {
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  display: block;
+  border: 4px solid var(--ink);
+  border-radius: 18px;
   background: white;
 }
 

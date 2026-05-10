@@ -7,6 +7,7 @@ const client = {
   hostId: null,
   playerId: localStorage.getItem("evilStartupsPlayerId") || "",
   apiBase: "",
+  apiBaseSource: "",
   eventSource: null,
   countdown: null,
   poller: null,
@@ -37,9 +38,12 @@ const audienceReactions = [
 async function init() {
   bindStaticEvents();
   const params = new URLSearchParams(location.search);
-  client.apiBase = (window.EVIL_API_BASE || params.get("api") || "").trim().replace(/\/+$/, "");
+  const apiParam = params.get("api")?.trim() || "";
+  client.apiBase = (window.EVIL_API_BASE || apiParam || "").trim().replace(/\/+$/, "");
+  client.apiBaseSource = apiParam ? "query" : "";
   if (!client.apiBase && !["localhost", "127.0.0.1"].includes(location.hostname)) {
     client.apiBase = "https://evil-startups.onrender.com";
+    client.apiBaseSource = "default";
   }
   const roomCode = params.get("room");
   if (roomCode) {
@@ -62,6 +66,15 @@ function bindStaticEvents() {
       toast(button.dataset.mode === "jackbox" ? "Host-screen mode active." : "Table mode enabled for local play.");
     }),
   );
+  const qrToggle = $("#showQr");
+  if (qrToggle) {
+    qrToggle.addEventListener("click", () => {
+      const qr = $("#joinQr");
+      if (!qr) return;
+      const visible = qr.classList.toggle("is-visible");
+      qrToggle.textContent = visible ? "Hide QR" : "QR";
+    });
+  }
 }
 
 async function bootHost() {
@@ -158,7 +171,7 @@ function render() {
     client.lastPhase = client.room.phase;
   }
   $("#roomCode").textContent = client.room.code;
-  $("#joinUrl").textContent = joinUrl(client.room.code);
+  updateJoinLink();
   if (client.role === "player") {
     renderController();
     return;
@@ -552,8 +565,21 @@ function copyRecap() {
 function joinUrl(code) {
   const url = new URL(location.href);
   url.searchParams.set("room", code);
-  if (client.apiBase) url.searchParams.set("api", client.apiBase);
+  if (client.apiBaseSource === "query") url.searchParams.set("api", client.apiBase);
   return url.toString();
+}
+
+function updateJoinLink() {
+  const link = joinUrl(client.room.code);
+  $("#joinUrl").textContent = link;
+  const qr = $("#joinQr");
+  if (qr) {
+    qr.innerHTML = `<img src="${qrImageUrl(link)}" alt="Join QR code" />`;
+  }
+}
+
+function qrImageUrl(text) {
+  return `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(text)}`;
 }
 
 function setPhase(phase) {
