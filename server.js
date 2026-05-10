@@ -56,36 +56,37 @@ const rounds = [
   },
   {
     type: "text",
-    title: "Logo Sketch",
-    prompt: "Describe your company's logo in one sentence.",
-    seconds: 40,
-    placeholder: "Ex: A skull wearing a tie, drinking coffee",
+    title: "Logo Drawing",
+    prompt: "Draw your company's logo using ASCII art.",
+    seconds: 45,
+    placeholder: "Ex: (o_o) EVIL CORP (o_o)",
     fallback: [
-      "A flaming trash can with angel wings",
-      "A broken heart made of credit cards",
-      "A wolf in sheep's clothing, but the sheep is on fire",
-    ],
-  },
-  {
-    type: "text",
-    title: "Emotional Pitch",
-    prompt: "What feeling does this company evoke?",
-    seconds: 30,
-    placeholder: "Ex: Existential dread mixed with false hope",
-    fallback: [
-      "The warm embrace of impending bankruptcy",
-      "Nostalgia for a future that never existed",
-      "The thrill of regret before it happens",
+      "  /\\_/\\  \n ( o.o ) \n  > ^ <  EVIL",
+      "$$$$$ EVIL $$$$$",
+      "[X] CORP [X]",
     ],
   },
   {
     type: "combo",
-    title: "Feature Mashup",
-    prompt: "Combine two features into one terrible product.",
-    seconds: 32,
+    title: "Slogan Builder",
+    prompt: "Build a slogan using these word fragments.",
+    seconds: 35,
     columns: [
-      ["Self-destruct button", "Auto-pilot", "Voice control", "Hologram display"],
-      ["Time machine", "Mind reader", "Weather changer", "Invisibility cloak"],
+      ["Think", "Live", "Love", "Hate"],
+      ["different", "evil", "greed", "pain"],
+      [".", "!", "?", "!!!", "™"],
+    ],
+  },
+  {
+    type: "text",
+    title: "Exit Strategy",
+    prompt: "How will you exit this disaster?",
+    seconds: 40,
+    placeholder: "Ex: Sell to a bigger disaster",
+    fallback: [
+      "IPO at the bottom of the market",
+      "Acquire a competitor's lawsuits",
+      "Go public with private regrets",
     ],
   },
 ];
@@ -106,17 +107,17 @@ const botAnswers = {
     "The mascot acted alone, except for the roadmap.",
     "We are pausing harm until the next funding round.",
   ],
-  "Logo Sketch": [
-    "A crying clown juggling chainsaws",
-    "A diamond ring made of barbed wire",
-    "A smiling sun with vampire teeth",
+  "Logo Drawing": [
+    "  (X_X) EVIL CORP (X_X)  ",
+    " $$$ EVIL $$$ ",
+    " [EVIL] CORP [EVIL] ",
   ],
-  "Emotional Pitch": [
-    "The bittersweet taste of borrowed time",
-    "Hopeful despair in a gilded cage",
-    "Warm fuzzies from a cactus hug",
+  "Slogan Builder": ["Think evil!", "Live greed™", "Love pain???"],
+  "Exit Strategy": [
+    "IPO at the bottom of the market",
+    "Acquire a competitor's lawsuits",
+    "Go public with private regrets",
   ],
-  "Feature Mashup": ["self-destruct time machine", "voice control mind reader", "auto-pilot invisibility cloak"],
 };
 
 function allowCors(res) {
@@ -425,13 +426,14 @@ async function handleApi(req, res, pathname) {
 
     if (req.method === "POST" && route === "action") {
       const body = await readJson(req);
-      const isHost = body.clientId === room.hostId && (!body.clientId.startsWith("host") || room.players.length === 0);
-      if (body.type === "start" && isHost) startShow(room);
+      const isPlayerHost = body.clientId === room.hostId;
+      const isScreenHost = body.clientId.startsWith("host");
+      if (body.type === "start" && isPlayerHost) startShow(room);
       if (body.type === "submit") submit(room, body.playerId, body.answer);
-      if (body.type === "openVote" && isHost) openVote(room);
+      if (body.type === "openVote" && isPlayerHost) openVote(room);
       if (body.type === "vote") vote(room, body.voterId || body.playerId || makeId("aud"), body.targetId);
-      if (body.type === "next" && isHost) nextRound(room);
-      if (body.type === "reset" && isHost) {
+      if (body.type === "next" && isPlayerHost) nextRound(room);
+      if (body.type === "reset" && isPlayerHost) {
         room.phase = "lobby";
         room.roundIndex = 0;
         room.submissions = {};
@@ -440,20 +442,20 @@ async function handleApi(req, res, pathname) {
         room.roundEndsAt = null;
         clearTimeout(room.timer);
       }
-      if (body.type === "addBot" && isHost) addBot(room, body.name);
-      if (body.type === "fillBots" && isHost) {
+      if (body.type === "addBot" && (isPlayerHost || isScreenHost)) addBot(room, body.name);
+      if (body.type === "fillBots" && (isPlayerHost || isScreenHost)) {
         ["Mira", "Jax", "Tina", "Omar", "Zoe", "Bean"].forEach((name) => {
           if (!room.players.some((player) => player.name === name)) addBot(room, name);
         });
       }
-      if (body.type === "botSubmitAll" && isHost) botSubmitAll(room);
-      if (body.type === "forceNext" && isHost) {
+      if (body.type === "botSubmitAll" && (isPlayerHost || isScreenHost)) botSubmitAll(room);
+      if (body.type === "forceNext" && (isPlayerHost || isScreenHost)) {
         if (room.phase === "challenge") finishRound(room);
         else if (room.phase === "reveal") openVote(room);
         else if (room.phase === "vote") finishVoting(room);
         else if (room.phase === "event") nextRound(room);
       }
-      if (body.type === "disconnectOne" && isHost) {
+      if (body.type === "disconnectOne" && (isPlayerHost || isScreenHost)) {
         const target = room.players.find((player) => !player.bot && player.connected) || room.players.find((player) => player.connected);
         if (target) target.connected = false;
       }

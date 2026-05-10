@@ -315,6 +315,11 @@ function renderEvent() {
   setPhase("event");
   $("#eventTitle").textContent = client.room.event?.title || "Breaking News";
   $("#eventBody").textContent = client.room.event?.body || "The host has nothing useful to add, which has never stopped them.";
+  if (client.room.roundIndex + 1 >= client.room.roundCount) {
+    $("#nextRound").textContent = "See Results";
+  } else {
+    $("#nextRound").textContent = "Next Round";
+  }
   burstConfetti(8);
 }
 
@@ -370,8 +375,25 @@ function renderController() {
   $("#controllerTitle").textContent = me.name;
 
   if (room.phase === "lobby") {
-    $("#controllerStatus").textContent = "You are in. Watch the host screen for the show.";
-    $("#controllerMount").innerHTML = `<div class="controller-wait">Waiting for the host to start...</div>`;
+    if (client.playerId === client.hostId) {
+      $("#controllerStatus").textContent = "You are the host! Start the show when ready.";
+      $("#controllerMount").innerHTML = `
+        <div class="controller-actions">
+          <button id="controllerStart" class="mega-button" type="button">Start Show</button>
+          <button id="controllerAddBot" class="secondary-button" type="button">Add Bot</button>
+          <button id="controllerFill" class="mini-button" type="button">Fill Party</button>
+        </div>
+      `;
+      $("#controllerStart").addEventListener("click", () => hostAction("start"));
+      $("#controllerAddBot").addEventListener("click", () => {
+        const name = prompt("Bot name:");
+        if (name) hostAction("addBot", { name });
+      });
+      $("#controllerFill").addEventListener("click", () => hostAction("fillBots"));
+    } else {
+      $("#controllerStatus").textContent = "You are in. Watch the host screen for the show.";
+      $("#controllerMount").innerHTML = `<div class="controller-wait">Waiting for the host to start...</div>`;
+    }
     return;
   }
 
