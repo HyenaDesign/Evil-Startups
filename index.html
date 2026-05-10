@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Evil Startups: Panic Pitch Party</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@500;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="networkError" class="network-banner" role="alert" aria-live="assertive"></div>
+    <div class="confetti" aria-hidden="true"></div>
+    <main id="app" class="game-stage" data-phase="lobby">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo-burst" aria-hidden="true">ES</div>
+          <div>
+            <p>Panic Pitch Party</p>
+            <h1>Evil Startups</h1>
+          </div>
+        </div>
+        <div class="room-pill" aria-label="Room code">
+          <span>Room</span>
+          <strong id="roomCode">EVIL</strong>
+        </div>
+        <button id="soundToggle" class="mini-button" type="button">Sound On</button>
+      </header>
+
+      <section id="lobbyScreen" class="screen is-active lobby-screen">
+        <div class="mascot-wrap" aria-hidden="true">
+          <div class="host-mascot">
+            <div class="eye left"></div>
+            <div class="eye right"></div>
+            <div class="mouth"></div>
+            <div class="tie"></div>
+          </div>
+          <div class="speech-pop">Welcome, future lawsuit magnets.</div>
+        </div>
+        <div class="lobby-copy">
+          <p class="kicker">Party game for bad ideas</p>
+          <h2>Corporate improv on the big screen.</h2>
+          <p>
+            Host this screen, hand phones to players, reveal terrible ideas together, and let the room vote on
+            the funniest fake corporation.
+          </p>
+          <div class="mode-panel" aria-label="Party flow">
+            <button class="mode-card is-selected" type="button" data-mode="jackbox">
+              <strong>Jackbox Style</strong>
+              <span>Host screen + phone controllers</span>
+            </button>
+            <button class="mode-card" type="button" data-mode="table">
+              <strong>Table Mode</strong>
+              <span>Everyone plays on one device</span>
+            </button>
+          </div>
+          <div class="player-entry">
+            <input id="playerInput" maxlength="18" placeholder="Fake player name" />
+            <button id="addPlayer" class="pop-button" type="button">Add Bot</button>
+          </div>
+          <div id="playerChips" class="player-chips"></div>
+          <div class="lobby-actions">
+            <button id="startShow" class="mega-button" type="button">Start Show</button>
+            <button id="demoFill" class="secondary-button" type="button">Fill Party</button>
+          </div>
+          <div class="join-card">
+            <strong>Players join:</strong>
+            <span id="joinUrl">evil.local/join</span>
+            <em>Open this on phones or remote devices.</em>
+          </div>
+          <div class="dev-panel">
+            <strong>Solo Dev Mode</strong>
+            <button id="devBotSubmit" class="mini-dev-button" type="button">Bot Submit</button>
+            <button id="devForceNext" class="mini-dev-button" type="button">Force Next</button>
+            <button id="devDisconnect" class="mini-dev-button" type="button">Sim Disconnect</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="controllerScreen" class="screen controller-screen">
+        <div class="controller-card">
+          <p class="kicker">Phone Controller</p>
+          <h2 id="controllerTitle">Join the room</h2>
+          <p id="controllerStatus">Enter a name. Your terrible idea will appear on the host screen.</p>
+          <div id="controllerMount"></div>
+        </div>
+      </section>
+
+      <section id="introScreen" class="screen intro-screen">
+        <div class="spotlight-card">
+          <p class="kicker">Live from Studio 404</p>
+          <h2 id="introHeadline">Tonight's competitors will monetize regret.</h2>
+          <div class="audience-meter">
+            <span>Audience Hype</span>
+            <div><i id="hypeFill"></i></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="themeScreen" class="screen theme-screen">
+        <p class="kicker">Corporate Mandate</p>
+        <h2 id="themeTitle">Loading terrible opportunity...</h2>
+        <div id="themeTags" class="theme-tags"></div>
+      </section>
+
+      <section id="challengeScreen" class="screen challenge-screen">
+        <div class="round-top">
+          <div>
+            <p id="roundLabel" class="kicker">Round 1</p>
+            <h2 id="challengeTitle">Name the monster</h2>
+          </div>
+          <div class="timer" aria-live="polite">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+              <circle cx="60" cy="60" r="52"></circle>
+              <circle id="timerArc" class="timer-arc" cx="60" cy="60" r="52"></circle>
+            </svg>
+            <strong id="timerText">20</strong>
+          </div>
+        </div>
+
+        <div class="challenge-arena">
+          <div id="challengePrompt" class="prompt-bubble">Make it terrible. Make it fast.</div>
+          <div id="interactionMount" class="interaction-mount"></div>
+        </div>
+
+        <div class="player-status" id="playerStatus"></div>
+
+        <aside class="host-panel">
+          <div class="tiny-host" aria-hidden="true"></div>
+          <p id="hostLine">I will be judging, roasting, and legally distancing myself.</p>
+        </aside>
+      </section>
+
+      <section id="revealScreen" class="screen reveal-screen">
+        <p class="kicker">Dramatic Reveal</p>
+        <h2 id="revealTitle">The board has seen enough.</h2>
+        <div id="marketReaction" class="market-reaction"></div>
+        <div id="revealCards" class="reveal-cards"></div>
+        <button id="continueToVote" class="mega-button" type="button">Open Voting</button>
+      </section>
+
+      <section id="voteScreen" class="screen vote-screen">
+        <p class="kicker">Audience Voting</p>
+        <h2>Which pitch deserves funding and containment?</h2>
+        <div id="voteCards" class="vote-cards"></div>
+      </section>
+
+      <section id="eventScreen" class="screen event-screen">
+        <p class="kicker">Breaking News</p>
+        <h2 id="eventTitle">Your servers started a cult.</h2>
+        <p id="eventBody">The host is consulting three lawyers and a brand strategist.</p>
+        <button id="nextRound" class="mega-button" type="button">Next Round</button>
+      </section>
+
+      <section id="finalScreen" class="screen final-screen">
+        <p class="kicker">Final Winner</p>
+        <h2 id="winnerTitle">The least responsible founder wins.</h2>
+        <div id="scoreboard" class="scoreboard"></div>
+        <div id="finalStory" class="final-story"></div>
+        <div class="lobby-actions">
+          <button id="playAgain" class="mega-button" type="button">Play Again</button>
+          <button id="copyRecap" class="secondary-button" type="button">Copy Recap</button>
+        </div>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="./config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
