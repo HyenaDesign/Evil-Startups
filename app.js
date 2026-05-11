@@ -297,6 +297,14 @@ function renderReveal() {
     )
     .join("");
   burstConfetti(10);
+  const revealNarration = submissions()
+    .map((submission) =>
+      submission.answer.startsWith("data:image")
+        ? `${submission.playerName} shows a drawing.`
+        : `${submission.playerName} says: ${submission.answer}`,
+    )
+    .join(" ");
+  narrate(revealNarration);
 }
 
 function renderVoteHost() {
@@ -336,6 +344,7 @@ function renderEvent() {
   } else {
     $("#nextRound").textContent = "Next Round";
   }
+  narrate(client.room.event?.title || "Breaking news");
   burstConfetti(8);
 }
 
@@ -609,7 +618,16 @@ function renderControllerVote() {
   $("#controllerMount").innerHTML = `
     <div class="controller-choice-grid">
       ${submissions()
-        .map((submission) => `<button class="choice-card" type="button" data-vote="${escapeHtml(submission.playerId)}">${escapeHtml(submission.playerName)}: ${escapeHtml(submission.answer)}</button>`)
+        .map((submission) => {
+          const isDrawing = String(submission.answer).startsWith("data:image");
+          return `
+            <button class="choice-card" type="button" data-vote="${escapeHtml(submission.playerId)}">
+              <strong>${escapeHtml(submission.playerName)}</strong>
+              ${isDrawing
+                ? `<img src="${escapeHtml(submission.answer)}" alt="Drawing by ${escapeHtml(submission.playerName)}" style="max-width:100%;max-height:140px;border-radius:14px;"/>`
+                : `<span>${escapeHtml(submission.answer)}</span>`}
+            </button>`;
+        })
         .join("")}
     </div>
   `;
@@ -860,6 +878,27 @@ function playBeep(frequency, duration) {
     client.sound = false;
     $("#soundToggle").textContent = "Sound Off";
   }
+}
+
+function narrate(text) {
+  if (!client.sound || !window.speechSynthesis) return;
+
+  speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 1;
+  utterance.pitch = 0.9;
+  utterance.volume = 1;
+
+  const voice = speechSynthesis
+    .getVoices()
+    .find((v) => v.name.includes("Google") || v.name.includes("Microsoft"));
+
+  if (voice) {
+    utterance.voice = voice;
+  }
+
+  speechSynthesis.speak(utterance);
 }
 
 function toast(message) {
