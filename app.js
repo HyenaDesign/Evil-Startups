@@ -99,9 +99,11 @@ async function bootPlayer(code) {
 
   if (client.playerId) {
     try {
-      const response = await postJson(`/api/rooms/${code}/join`, { playerId: client.playerId });
+      const name = localStorage.getItem("evilStartupsName");
+      const response = await postJson(`/api/rooms/${code}/join`, { playerId: client.playerId, name });
       client.playerId = response.playerId;
       localStorage.setItem("evilStartupsPlayerId", client.playerId);
+      if (response.player.name) localStorage.setItem("evilStartupsName", response.player.name);
       client.room = response.room;
       renderController();
     } catch (error) {
@@ -359,6 +361,7 @@ function renderJoinController(code) {
       const response = await postJson(`/api/rooms/${code}/join`, { name, playerId: client.playerId });
       client.playerId = response.playerId;
       localStorage.setItem("evilStartupsPlayerId", client.playerId);
+      localStorage.setItem("evilStartupsName", response.player.name);
       client.room = response.room;
       renderController();
     } catch (error) {

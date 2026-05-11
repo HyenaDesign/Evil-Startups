@@ -427,7 +427,7 @@ async function handleApi(req, res, pathname) {
     if (req.method === "POST" && route === "action") {
       const body = await readJson(req);
       const isPlayerHost = body.clientId === room.hostId;
-      const isScreenHost = body.clientId.startsWith("host");
+      const isScreenHost = body.clientId && body.clientId.startsWith("host");
       if (body.type === "start" && isPlayerHost) startShow(room);
       if (body.type === "submit") submit(room, body.playerId, body.answer);
       if (body.type === "openVote" && isPlayerHost) openVote(room);
