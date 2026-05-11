@@ -65,7 +65,7 @@ function preloadAudio() {
 function startBackgroundMusic() {
   const bg = new Audio("assets/audio/backgroundmusic.mp3");
   bg.loop = true;
-  bg.volume = 0.15;
+  bg.volume = 0.08;
   bg.play().catch((error) => {
     // Browsers block autoplay until the user interacts with the page.
     // Wait for the first click/keydown and try again.
@@ -387,7 +387,6 @@ function renderReveal() {
               ? `<img src="${escapeHtml(submission.answer)}" alt="Drawing" style="max-width: 100%; max-height: 200px;">`
               : `<p>${escapeHtml(submission.answer)}</p>`
           }
-          <span class="ad-stamp">${escapeHtml(fakeAudienceReaction(submission.answer))}</span>
         </article>
       `,
     )
@@ -412,7 +411,6 @@ function renderVoteHost() {
             ? `<img src="${escapeHtml(submission.answer)}" alt="Drawing" style="max-width: 100%; max-height: 150px;">`
             : `<p>${escapeHtml(submission.answer)}</p>`
         }
-        <span class="ad-stamp">${escapeHtml(fakeAudienceReaction(submission.answer))}</span>
         <span class="vote-count">${voteCountFor(submission.playerId)}</span>
       </article>
     `,
@@ -531,6 +529,7 @@ function renderLeaderboard() {
   }
 }
 
+
 function renderEvent() {
   setPhase("event");
   $("#eventTitle").textContent = client.room.event?.title || "Breaking News";
@@ -542,7 +541,6 @@ function renderEvent() {
   }
   burstConfetti(8);
 }
-
 
 function renderFinal() {
   setPhase("final");
@@ -672,7 +670,7 @@ function initDrawing() {
     ctx.fillRect(0, 0, displayW, displayH);
   });
 
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 8;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.strokeStyle = "#000";

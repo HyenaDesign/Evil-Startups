@@ -917,17 +917,7 @@ button:active {
 
 .reveal-card::before,
 .vote-card::before {
-  content: "SPONSORED";
-  position: absolute;
-  top: -13px;
-  right: 16px;
-  padding: 5px 9px;
-  border: 3px solid var(--ink);
-  border-radius: 999px;
-  background: var(--yellow);
-  font-size: 0.68rem;
-  font-weight: 1000;
-  transform: rotate(3deg);
+  content: none;
 }
 
 .reveal-card:nth-child(2n),
@@ -1096,22 +1086,29 @@ button:active {
   gap: 0;
   padding: clamp(16px, 3vw, 36px);
   background:
-    radial-gradient(circle at 80% 10%, rgba(59,183,255,0.35), transparent 28%),
-    linear-gradient(135deg, #151019 0%, #2d1f40 100%);
-  color: white;
+    radial-gradient(circle at 15% 12%, rgba(255,225,86,0.7), transparent 22%),
+    radial-gradient(circle at 85% 80%, rgba(59,183,255,0.5), transparent 24%),
+    linear-gradient(135deg, #fff6d7 0%, #ffd6f0 100%);
   overflow-y: auto;
 }
 
 .leaderboard-screen .kicker {
-  color: rgba(255,255,255,0.65);
+  color: rgba(21,16,25,0.65);
 }
 
 .lb-winner-headline {
-  font-size: clamp(1.1rem, 2.6vw, 2rem);
-  color: var(--yellow);
-  margin-bottom: 18px;
+  font-size: clamp(1.1rem, 2.4vw, 1.75rem);
+  color: var(--ink);
+  background: var(--yellow);
+  display: inline-block;
+  padding: 6px 18px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 4px 4px 0 var(--ink);
+  margin-bottom: 20px;
   text-transform: none;
-  line-height: 1.1;
+  line-height: 1.2;
+  font-family: "Archivo Black", Inter, sans-serif;
 }
 
 .lb-rows {
@@ -1127,21 +1124,24 @@ button:active {
   align-items: center;
   gap: 10px 14px;
   padding: 14px 18px;
-  border: 3px solid rgba(255,255,255,0.12);
-  border-radius: 20px;
-  background: rgba(255,255,255,0.07);
+  border: 4px solid var(--ink);
+  border-radius: 22px;
+  background: white;
+  box-shadow: 5px 5px 0 var(--ink);
   animation: lbSlideIn 450ms cubic-bezier(0.2,1.2,0.2,1) both;
-  transition: background 300ms;
 }
 
+.lb-row:nth-child(2n) { background: var(--paper); }
+.lb-row:nth-child(3n) { background: #e4ffef; }
+
 .lb-row-winner {
-  border-color: var(--yellow);
-  background: rgba(255,225,86,0.13);
+  border-color: var(--ink);
+  background: var(--yellow) !important;
 }
 
 @keyframes lbSlideIn {
-  from { opacity: 0; transform: translateX(-32px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateX(-28px) rotate(-1deg); }
+  to   { opacity: 1; transform: translateX(0) rotate(0); }
 }
 
 .lb-medal {
@@ -1151,9 +1151,9 @@ button:active {
 }
 
 .lb-name {
-  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-size: clamp(1rem, 2vw, 1.3rem);
   font-weight: 900;
-  color: white;
+  color: var(--ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1162,7 +1162,7 @@ button:active {
 .lb-name em {
   font-style: normal;
   font-size: 0.7em;
-  opacity: 0.55;
+  opacity: 0.45;
   font-weight: 700;
 }
 
@@ -1174,18 +1174,20 @@ button:active {
 }
 
 .lb-badge {
-  padding: 4px 9px;
+  padding: 4px 10px;
+  border: 2px solid var(--ink);
   border-radius: 999px;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 1000;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   white-space: nowrap;
+  box-shadow: 2px 2px 0 var(--ink);
 }
 
-.lb-badge-winner { background: var(--yellow); color: var(--ink); }
-.lb-badge-leader { background: var(--green); color: var(--ink); }
-.lb-badge-climb  { background: var(--blue);  color: var(--ink); }
+.lb-badge-winner { background: var(--orange); color: white; }
+.lb-badge-leader { background: var(--green);  color: var(--ink); }
+.lb-badge-climb  { background: var(--blue);   color: var(--ink); }
 
 .lb-score-wrap {
   display: flex;
@@ -1197,29 +1199,31 @@ button:active {
 .lb-score {
   font-family: "Archivo Black", Inter, sans-serif;
   font-size: clamp(1.3rem, 2.5vw, 2rem);
-  color: white;
+  color: var(--ink);
   min-width: 3ch;
   text-align: right;
 }
 
 .lb-gained {
-  padding: 3px 9px;
+  padding: 4px 10px;
+  border: 2px solid var(--ink);
   border-radius: 999px;
   background: var(--green);
   color: var(--ink);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 1000;
+  box-shadow: 2px 2px 0 var(--ink);
   animation: lbGainedPop 500ms 400ms cubic-bezier(0.2,1.4,0.3,1) both;
 }
 
 @keyframes lbGainedPop {
-  from { opacity: 0; transform: scale(0.5); }
-  to   { opacity: 1; transform: scale(1); }
+  from { opacity: 0; transform: scale(0.4) rotate(-8deg); }
+  to   { opacity: 1; transform: scale(1) rotate(0); }
 }
 
 .lb-arrow-up   { color: var(--green); font-size: 1.4rem; font-weight: 900; text-align: center; }
 .lb-arrow-down { color: var(--red);   font-size: 1.4rem; font-weight: 900; text-align: center; }
-.lb-arrow-flat { color: rgba(255,255,255,0.3); font-size: 1.1rem; text-align: center; }
+.lb-arrow-flat { color: rgba(21,16,25,0.25); font-size: 1.1rem; text-align: center; }
 
 .lb-actions {
   display: flex;
