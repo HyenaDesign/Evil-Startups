@@ -571,7 +571,10 @@ if (round.type === "draw") {
 
   $("#submitDrawing").addEventListener("click", () => {
     const canvas = $("#drawCanvas");
-    const answer = canvas.toDataURL();
+    const answer = canvas.toDataURL(
+  "image/jpeg",
+  0.7
+);
 
     playerAction("submit", { answer });
   });

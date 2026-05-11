@@ -273,14 +273,27 @@ function beginRound(room) {
 
 function submit(room, playerId, answer) {
   if (room.phase !== "challenge") return;
-  const player = room.players.find((item) => item.id === playerId);
+
+  const player = room.players.find(
+    (item) => item.id === playerId
+  );
+
   if (!player) return;
+
   const round = rounds[room.roundIndex];
+
+  const finalAnswer = String(
+    answer || pick(round.fallback || ["Untitled Liability"])
+  );
+
   room.submissions[playerId] = {
     playerId,
     playerName: player.name,
-    answer: String(answer || pick(round.fallback || ["Untitled Liability"])).slice(0, 220),
+    answer: finalAnswer.startsWith("data:image")
+      ? finalAnswer
+      : finalAnswer.slice(0, 220),
   };
+
   adjustPacing(room);
   broadcast(room);
 }
