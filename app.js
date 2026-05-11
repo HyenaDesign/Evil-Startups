@@ -89,9 +89,12 @@ async function init() {
   const apiParam = params.get("api")?.trim() || "";
   client.apiBase = (window.EVIL_API_BASE || apiParam || "").trim().replace(/\/+$/, "");
   client.apiBaseSource = apiParam ? "query" : "";
-  if (!client.apiBase && !["localhost", "127.0.0.1"].includes(location.hostname)) {
+  if (!client.apiBase && !["localhost", "127.0.0.1", "evil.local"].includes(location.hostname)) {
     client.apiBase = "https://evil-startups.onrender.com";
     client.apiBaseSource = "default";
+  } else if (!client.apiBase) {
+    client.apiBase = `http://${location.hostname}:4173`;
+    client.apiBaseSource = "local";
   }
   const roomCode = params.get("room");
   if (roomCode) {
@@ -139,6 +142,8 @@ async function bootHost() {
     console.error("Host initialization failed", error);
     setPhase("lobby");
     showNetworkError("Unable to start host session. Confirm the backend is reachable.");
+    // Still bind controls so user can retry or see status
+    bindHostControls();
   }
 }
 
@@ -164,7 +169,11 @@ async function bootPlayer(code) {
 }
 
 function bindHostControls() {
-  $("#addPlayer").addEventListener("click", () => {
+  $("#addPlayer").addEventListener("click", async () => {
+    if (!client.room) {
+      toast("Create a room first by clicking 'Start Show'");
+      return;
+    }
     const name = $("#playerInput").value.trim() || `Bot ${Date.now().toString().slice(-2)}`;
     $("#playerInput").value = "";
     hostAction("addBot", { name });
@@ -172,8 +181,31 @@ function bindHostControls() {
   $("#playerInput").addEventListener("keydown", (event) => {
     if (event.key === "Enter") $("#addPlayer").click();
   });
-  $("#demoFill").addEventListener("click", () => hostAction("fillBots"));
-  $("#startShow").addEventListener("click", () => hostAction("start"));
+  $("#demoFill").addEventListener("click", async () => {
+    if (!client.room) {
+      toast("Create a room first by clicking 'Start Show'");
+      return;
+    }
+    hostAction("fillBots");
+  });
+  $("#startShow").addEventListener("click", async () => {
+    if (!client.room) {
+      // Try to create a room if we don't have one
+      try {
+        const response = await postJson("/api/rooms", {});
+        client.hostId = response.hostId;
+        connectToRoom(response.room.code);
+        $("#joinUrl").textContent = joinUrl(response.room.code);
+        // Now that we have a room, start the show
+        hostAction("start");
+      } catch (error) {
+        console.error("Failed to create room on start", error);
+        showNetworkError("Could not start the show. Check backend connection.");
+      }
+    } else {
+      hostAction("start");
+    }
+  });
   $("#continueToVote").addEventListener("click", () => hostAction("openVote"));
   $("#nextRound").addEventListener("click", () => hostAction("next"));
   $("#playAgain").addEventListener("click", () => hostAction("reset"));
@@ -654,8 +686,7 @@ if (drawCanvas) {
   drawCanvas.style.display = "none";
 }
   $("#controllerMount").innerHTML = `
-  (
-    `<div class="controller-actions">
+    <div class="controller-actions">
       <textarea id="controllerAnswer" rows="4" placeholder="${escapeHtml(round.placeholder || "Type your answer")}" autocomplete="off" spellcheck="false"></textarea>
       <button id="submitAnswer" class="mega-button" type="button" data-submitting="false">Submit</button>
     </div>
