@@ -256,7 +256,7 @@ function startShow(room) {
   broadcast(room);
   schedule(room, 2200, () => {
     room.phase = "theme";
-    schedule(room, 2600, () => beginRound(room));
+    schedule(room, 5500, () => beginRound(room));
   });
 }
 

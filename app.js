@@ -18,6 +18,7 @@ const client = {
   timeWarningPlayed: false,
   legalWarningPlayed: false,
   roundStartPlayed: false,
+  currentAudio: null,
 };
 
 const marketBits = [
@@ -513,6 +514,14 @@ if (room.phase === "reveal" && client.playerId === client.hostId) {
 function initDrawing() {
   const canvas = $("#drawCanvas");
   const ctx = canvas.getContext("2d");
+  
+  // Match canvas display size with drawing resolution
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.ceil(rect.width * dpr);
+  canvas.height = Math.ceil(rect.height * dpr);
+  ctx.scale(dpr, dpr);
+  
   ctx.lineWidth = 3;
   ctx.lineCap = "round";
   ctx.strokeStyle = "#000";
@@ -541,9 +550,7 @@ function initDrawing() {
 
   function getCoords(e) {
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    return [(e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY];
+    return [(e.clientX - rect.left), (e.clientY - rect.top)];
   }
 
   canvas.addEventListener("mousedown", startDrawing);
@@ -597,8 +604,6 @@ if (round.type === "draw") {
     <div class="controller-actions">
       <canvas
         id="drawCanvas"
-        width="320"
-        height="320"
         style="
           width: 100%;
           max-width: 320px;
@@ -616,7 +621,7 @@ if (round.type === "draw") {
         Clear
       </button>
 
-      <button id="submitDrawing" class="mega-button" type="button">
+      <button id="submitDrawing" class="mega-button" type="button" data-submitting="false">
         Submit Drawing
       </button>
     </div>
@@ -649,15 +654,27 @@ if (drawCanvas) {
   drawCanvas.style.display = "none";
 }
   $("#controllerMount").innerHTML = `
-    <div class="controller-actions">
-      <textarea id="controllerAnswer" rows="4" placeholder="${escapeHtml(round.placeholder || "Type your answer")}"></textarea>
-      <button id="submitAnswer" class="mega-button" type="button">Submit</button>
+  (
+    `<div class="controller-actions">
+      <textarea id="controllerAnswer" rows="4" placeholder="${escapeHtml(round.placeholder || "Type your answer")}" autocomplete="off" spellcheck="false"></textarea>
+      <button id="submitAnswer" class="mega-button" type="button" data-submitting="false">Submit</button>
     </div>
   `;
-  $("#submitAnswer").addEventListener("click", () => {
-    const answer = $("#controllerAnswer").value.trim();
+  const submitBtn = $("#submitAnswer");
+  const answerInput = $("#controllerAnswer");
+  
+  // Prevent accidental double-submissions
+  submitBtn.addEventListener("click", () => {
+    if (submitBtn.dataset.submitting === "true") return;
+    const answer = answerInput.value.trim();
     if (!answer) return toast("Give the host something to roast.");
-    playerAction("submit", { answer });
+    submitBtn.dataset.submitting = "true";
+    submitBtn.disabled = true;
+    answerInput.blur();
+    playerAction("submit", { answer }).finally(() => {
+      submitBtn.dataset.submitting = "false";
+      submitBtn.disabled = false;
+    });
   });
 }
 
@@ -951,8 +968,15 @@ function playAudio(filename, volume = 1) {
   if (!client.sound) return null;
 
   try {
+    // Stop any currently playing audio to prevent overlaps
+    if (client.currentAudio) {
+      client.currentAudio.pause();
+      client.currentAudio.currentTime = 0;
+    }
+    
     const audio = new Audio(`assets/audio/${filename}`);
     audio.volume = volume;
+    client.currentAudio = audio;
     audio.play().catch((error) => {
       console.warn("Audio play blocked:", error);
     });

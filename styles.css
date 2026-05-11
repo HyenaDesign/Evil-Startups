@@ -561,6 +561,9 @@ button:active {
   border-radius: 30px;
   background: white;
   box-shadow: 12px 12px 0 var(--ink);
+  overflow-y: auto;
+  max-height: 100vh;
+  -webkit-overflow-scrolling: touch;
 }
 
 .controller-card h2 {
@@ -577,6 +580,7 @@ button:active {
 .controller-choice-grid {
   display: grid;
   gap: 12px;
+  overflow: hidden;
 }
 
 .controller-wait {
