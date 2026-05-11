@@ -297,14 +297,6 @@ function renderReveal() {
     )
     .join("");
   burstConfetti(10);
-  const revealNarration = submissions()
-    .map((submission) =>
-      submission.answer.startsWith("data:image")
-        ? `${submission.playerName} shows a drawing.`
-        : `${submission.playerName} says: ${submission.answer}`,
-    )
-    .join(" ");
-  narrate(revealNarration);
 }
 
 function renderVoteHost() {
@@ -344,7 +336,6 @@ function renderEvent() {
   } else {
     $("#nextRound").textContent = "Next Round";
   }
-  narrate(client.room.event?.title || "Breaking news");
   burstConfetti(8);
 }
 
@@ -878,27 +869,6 @@ function playBeep(frequency, duration) {
     client.sound = false;
     $("#soundToggle").textContent = "Sound Off";
   }
-}
-
-function narrate(text) {
-  if (!client.sound || !window.speechSynthesis) return;
-
-  speechSynthesis.cancel();
-
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 1;
-  utterance.pitch = 0.9;
-  utterance.volume = 1;
-
-  const voice = speechSynthesis
-    .getVoices()
-    .find((v) => v.name.includes("Google") || v.name.includes("Microsoft"));
-
-  if (voice) {
-    utterance.voice = voice;
-  }
-
-  speechSynthesis.speak(utterance);
 }
 
 function toast(message) {
