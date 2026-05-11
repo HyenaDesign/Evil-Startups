@@ -15,6 +15,7 @@ const client = {
   voted: false,
   lastPhase: "",
   networkError: false,
+  timeWarningPlayed: false,
 };
 
 const marketBits = [
@@ -35,7 +36,47 @@ const audienceReactions = [
   "Stock inexplicably up",
 ];
 
+// Preload key audio files to reduce lag on first play
+const PRELOAD_AUDIO = [
+  "welcome.mp3",
+  "end_of_round.mp3",
+  "end_of_round2.mp3",
+  "end_of_round3.mp3",
+  "end_of_last_round.mp3",
+  "legal_warnings.mp3",
+  "times_almost_up.mp3",
+  "times_almost_up2.mp3",
+];
+
+function preloadAudio() {
+  PRELOAD_AUDIO.forEach((filename) => {
+    const audio = new Audio(`assets/audio/${filename}`);
+    audio.load();
+  });
+}
+
+function startBackgroundMusic() {
+  const bg = new Audio("assets/audio/backgroundmusic.mp3");
+  bg.loop = true;
+  bg.volume = 0.15;
+  bg.play().catch((error) => {
+    // Browsers block autoplay until the user interacts with the page.
+    // Wait for the first click/keydown and try again.
+    console.info("Background music blocked, waiting for interaction:", error);
+    const retry = () => {
+      bg.play().catch(() => {});
+      document.removeEventListener("click", retry);
+      document.removeEventListener("keydown", retry);
+    };
+    document.addEventListener("click", retry);
+    document.addEventListener("keydown", retry);
+  });
+  client.bgMusic = bg;
+}
+
 async function init() {
+  preloadAudio();
+  startBackgroundMusic();
   bindStaticEvents();
   const params = new URLSearchParams(location.search);
   const apiParam = params.get("api")?.trim() || "";
@@ -58,6 +99,9 @@ function bindStaticEvents() {
   $("#soundToggle").addEventListener("click", () => {
     client.sound = !client.sound;
     $("#soundToggle").textContent = client.sound ? "Sound On" : "Sound Off";
+    if (client.bgMusic) {
+      client.sound ? client.bgMusic.play().catch(() => {}) : client.bgMusic.pause();
+    }
   });
   $$(".mode-card").forEach((button) =>
     button.addEventListener("click", () => {
@@ -168,6 +212,7 @@ function render() {
   if (client.lastPhase !== client.room.phase) {
     if (client.room.phase === "challenge") {
       client.voted = false;
+      client.timeWarningPlayed = false;
       if (client.mode === "table") client.tableTurn = 0;
     }
     if (client.room.phase === "vote") client.voted = false;
@@ -214,6 +259,7 @@ function renderPlayers() {
 function renderIntro() {
   setPhase("intro");
   $("#introHeadline").textContent = `${client.room.players.length} founders joined. The host is legally excited.`;
+  playAudio("welcome.mp3");
 }
 
 function renderTheme() {
@@ -297,6 +343,20 @@ function renderReveal() {
     )
     .join("");
   burstConfetti(10);
+
+  // FIX: Chain legal_warnings.mp3 to play after the round-end clip finishes,
+  // instead of both firing simultaneously.
+  const isLastRound = client.room.roundIndex + 1 >= client.room.roundCount;
+  const roundClip = isLastRound
+    ? "end_of_last_round.mp3"
+    : pick(["end_of_round.mp3", "end_of_round2.mp3", "end_of_round3.mp3"]);
+
+  const first = playAudio(roundClip);
+  if (first) {
+    first.addEventListener("ended", () => playAudio("legal_warnings.mp3"));
+  } else {
+    // Sound is off or audio failed — nothing to chain
+  }
 }
 
 function renderVoteHost() {
@@ -650,7 +710,14 @@ function updateCountdown() {
   const total = Math.max(1, client.room.currentRound.seconds);
   $("#timerText").textContent = seconds;
   $("#timerArc").style.strokeDashoffset = String(327 - 327 * Math.min(1, seconds / total));
-  if (seconds <= 5 && seconds > 0) playBeep(340 + (6 - seconds) * 65, 0.025);
+  if (seconds <= 5 && seconds > 0) {
+    playBeep(340 + (6 - seconds) * 65, 0.025);
+    if (!client.timeWarningPlayed) {
+      const warningAudios = ["times_almost_up.mp3", "times_almost_up2.mp3"];
+      playAudio(pick(warningAudios));
+      client.timeWarningPlayed = true;
+    }
+  }
 }
 
 function hostAction(type, payload = {}) {
@@ -868,6 +935,22 @@ function playBeep(frequency, duration) {
   } catch {
     client.sound = false;
     $("#soundToggle").textContent = "Sound Off";
+  }
+}
+
+function playAudio(filename, volume = 1) {
+  if (!client.sound) return null;
+
+  try {
+    const audio = new Audio(`assets/audio/${filename}`);
+    audio.volume = volume;
+    audio.play().catch((error) => {
+      console.warn("Audio play blocked:", error);
+    });
+    return audio;
+  } catch (error) {
+    console.warn("Audio load failed:", error);
+    return null;
   }
 }
 
