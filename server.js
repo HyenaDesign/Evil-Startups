@@ -67,14 +67,17 @@ const rounds = [
     ],
   },
   {
-    type: "combo",
-    title: "Slogan Builder",
-    prompt: "Build a slogan using these word fragments.",
-    seconds: 35,
-    columns: [
-      ["Think", "Live", "Love", "Hate"],
-      ["different", "evil", "greed", "pain"],
-      [".", "!", "?", "!!!", "™"],
+    type: "text",
+    title: "One Word Feeling",
+    prompt: "Describe your company's vibe in one word.",
+    seconds: 25,
+    placeholder: "Ex: Chaotic",
+    fallback: [
+      "Chaotic",
+      "Doomed",
+      "Profitable",
+      "Illegal",
+      "Unstable",
     ],
   },
   {
@@ -112,7 +115,11 @@ const botAnswers = {
     " $$$ EVIL $$$ ",
     " [EVIL] CORP [EVIL] ",
   ],
-  "Slogan Builder": ["Think evil!", "Live greed™", "Love pain???"],
+  "One Word Feeling": [
+    "Chaotic",
+    "Doomed",
+    "Profitable",
+  ],
   "Exit Strategy": [
     "IPO at the bottom of the market",
     "Acquire a competitor's lawsuits",
@@ -164,10 +171,9 @@ function makeRoomCode() {
 
 function createRoom() {
   const code = makeRoomCode();
-  const hostId = makeId("host");
   const room = {
     code,
-    hostId,
+    hostId: null,
     phase: "lobby",
     players: [],
     spectators: 0,

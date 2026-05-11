@@ -150,6 +150,7 @@ function connectToRoom(code) {
   };
   client.eventSource.onmessage = (event) => {
     client.room = JSON.parse(event.data);
+    client.hostId = client.room.hostId;
     render();
   };
   client.eventSource.onerror = () => {
