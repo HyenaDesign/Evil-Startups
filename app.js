@@ -43,7 +43,7 @@ const audienceReactions = [
 // pick() will randomise which one plays each time.
 const SOUNDS = {
   roundStart:   ["round_start.mp3"],
-  roundEnd:     ["end_of_round.mp3", "end_of_round2.mp3", "end_of_round3.mp3"],
+  roundEnd:     ["end_of_round.mp3", "end_of_round2.mp3", "end_of_round3.mp3", "endofround4.mp3", "endofround5.mp3", "endofround6.mp3", "endofround7.mp3", "endofround8.mp3"],
   lastRoundEnd: ["end_of_last_round.mp3"],
   legalWarning: ["legal_warnings.mp3"],
   timeWarning:  ["times_almost_up.mp3", "times_almost_up2.mp3"],
@@ -219,7 +219,6 @@ function render() {
     if (client.room.phase === "challenge") {
       client.voted = false;
       client.timeWarningPlayed = false;
-      client.legalWarningPlayed = false;
       client.roundStartPlayed = false;
       if (client.mode === "table") client.tableTurn = 0;
     }
