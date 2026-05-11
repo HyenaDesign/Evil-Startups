@@ -480,6 +480,8 @@ function initDrawing() {
   });
   canvas.addEventListener("touchend", stopDrawing);
 }
+
+function renderControllerChallenge(round) {
   const submitted = client.room.ready[client.playerId];
   $("#controllerStatus").textContent = `${round.title}: ${round.prompt}`;
   if (submitted) {
