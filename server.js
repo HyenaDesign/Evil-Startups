@@ -55,15 +55,13 @@ const rounds = [
     ],
   },
   {
-    type: "text",
+    type: "draw",
     title: "Logo Drawing",
-    prompt: "Draw your company's logo using ASCII art.",
+    prompt: "Draw your company's logo.",
     seconds: 45,
-    placeholder: "Ex: (o_o) EVIL CORP (o_o)",
+    placeholder: "",
     fallback: [
-      "  /\\_/\\  \n ( o.o ) \n  > ^ <  EVIL",
-      "$$$$$ EVIL $$$$$",
-      "[X] CORP [X]",
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
     ],
   },
   {
@@ -111,9 +109,7 @@ const botAnswers = {
     "We are pausing harm until the next funding round.",
   ],
   "Logo Drawing": [
-    "  (X_X) EVIL CORP (X_X)  ",
-    " $$$ EVIL $$$ ",
-    " [EVIL] CORP [EVIL] ",
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
   ],
   "One Word Feeling": [
     "Chaotic",

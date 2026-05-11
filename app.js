@@ -286,7 +286,11 @@ function renderReveal() {
       (submission) => `
         <article class="reveal-card">
           <h3>${escapeHtml(submission.playerName)}</h3>
-          <p>${escapeHtml(submission.answer)}</p>
+          ${
+            submission.answer.startsWith("data:image")
+              ? `<img src="${escapeHtml(submission.answer)}" alt="Drawing" style="max-width: 100%; max-height: 200px;">`
+              : `<p>${escapeHtml(submission.answer)}</p>`
+          }
           <span class="ad-stamp">${escapeHtml(fakeAudienceReaction(submission.answer))}</span>
         </article>
       `,
@@ -302,16 +306,22 @@ function renderVoteHost() {
       (submission) => `
       <article class="vote-card" data-player="${escapeHtml(submission.playerId)}">
         <h3>${escapeHtml(submission.playerName)}</h3>
-        <p>${escapeHtml(submission.answer)}</p>
+        ${
+          submission.answer.startsWith("data:image")
+            ? `<img src="${escapeHtml(submission.answer)}" alt="Drawing" style="max-width: 100%; max-height: 150px;">`
+            : `<p>${escapeHtml(submission.answer)}</p>`
+        }
         <span class="ad-stamp">${escapeHtml(fakeAudienceReaction(submission.answer))}</span>
         <span class="vote-count">${voteCountFor(submission.playerId)}</span>
       </article>
     `,
     )
     .join("");
-  $$(".vote-card").forEach((card) =>
-    card.addEventListener("click", () => hostAction("vote", { voterId: `aud_${Date.now()}`, targetId: card.dataset.player })),
-  );
+  if (client.role !== "host") {
+    $$(".vote-card").forEach((card) =>
+      card.addEventListener("click", () => hostAction("vote", { voterId: `aud_${Date.now()}`, targetId: card.dataset.player })),
+    );
+  }
 }
 
 function renderEvent() {
@@ -386,6 +396,8 @@ function renderController() {
           <button id="controllerStart" class="mega-button" type="button">Start Show</button>
           <button id="controllerAddBot" class="secondary-button" type="button">Add Bot</button>
           <button id="controllerFill" class="mini-button" type="button">Fill Party</button>
+          <button id="controllerBotSubmit" class="mini-button" type="button">Bot Submit</button>
+          <button id="controllerForceNext" class="mini-button" type="button">Force Next</button>
         </div>
       `;
       $("#controllerStart").addEventListener("click", () => hostAction("start"));
@@ -394,6 +406,8 @@ function renderController() {
         if (name) hostAction("addBot", { name });
       });
       $("#controllerFill").addEventListener("click", () => hostAction("fillBots"));
+      $("#controllerBotSubmit").addEventListener("click", () => hostAction("botSubmitAll"));
+      $("#controllerForceNext").addEventListener("click", () => hostAction("forceNext"));
     } else {
       $("#controllerStatus").textContent = "You are in. Watch the host screen for the show.";
       $("#controllerMount").innerHTML = `<div class="controller-wait">Waiting for the host to start...</div>`;
@@ -415,7 +429,57 @@ function renderController() {
   $("#controllerMount").innerHTML = `<div class="controller-wait">${escapeHtml(controllerStatusFor(room.phase))}</div>`;
 }
 
-function renderControllerChallenge(round) {
+function initDrawing() {
+  const canvas = $("#drawCanvas");
+  const ctx = canvas.getContext("2d");
+  ctx.lineWidth = 3;
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#000";
+  let drawing = false;
+  let lastX = 0;
+  let lastY = 0;
+
+  function startDrawing(e) {
+    drawing = true;
+    [lastX, lastY] = getCoords(e);
+  }
+
+  function draw(e) {
+    if (!drawing) return;
+    const [x, y] = getCoords(e);
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    [lastX, lastY] = [x, y];
+  }
+
+  function stopDrawing() {
+    drawing = false;
+  }
+
+  function getCoords(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return [(e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY];
+  }
+
+  canvas.addEventListener("mousedown", startDrawing);
+  canvas.addEventListener("mousemove", draw);
+  canvas.addEventListener("mouseup", stopDrawing);
+  canvas.addEventListener("mouseout", stopDrawing);
+
+  canvas.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    startDrawing(e.touches[0]);
+  });
+  canvas.addEventListener("touchmove", (e) => {
+    e.preventDefault();
+    draw(e.touches[0]);
+  });
+  canvas.addEventListener("touchend", stopDrawing);
+}
   const submitted = client.room.ready[client.playerId];
   $("#controllerStatus").textContent = `${round.title}: ${round.prompt}`;
   if (submitted) {
@@ -445,6 +509,28 @@ function renderControllerChallenge(round) {
     });
     return;
   }
+  if (round.type === "draw") {
+    $("#drawCanvas").style.display = "block";
+    $("#controllerMount").innerHTML = `
+      <div class="controller-actions">
+        <button id="clearCanvas" class="secondary-button" type="button">Clear</button>
+        <button id="submitDrawing" class="mega-button" type="button">Submit Drawing</button>
+      </div>
+    `;
+    initDrawing();
+    $("#clearCanvas").addEventListener("click", () => {
+      const canvas = $("#drawCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+    $("#submitDrawing").addEventListener("click", () => {
+      const canvas = $("#drawCanvas");
+      const answer = canvas.toDataURL();
+      playerAction("submit", { answer });
+    });
+    return;
+  }
+  $("#drawCanvas").style.display = "none";
   $("#controllerMount").innerHTML = `
     <div class="controller-actions">
       <textarea id="controllerAnswer" rows="4" placeholder="${escapeHtml(round.placeholder || "Type your answer")}"></textarea>
