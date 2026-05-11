@@ -1057,6 +1057,131 @@ button:active {
   line-height: 1.08;
 }
 
+.scoreboard-screen {
+  display: grid;
+  place-items: center;
+  padding: clamp(18px, 4vw, 44px);
+  padding-left: calc(clamp(18px, 4vw, 44px) + env(safe-area-inset-left, 0px));
+  padding-right: calc(clamp(18px, 4vw, 44px) + env(safe-area-inset-right, 0px));
+  padding-bottom: calc(clamp(18px, 4vw, 44px) + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  text-align: center;
+  color: white;
+}
+
+.scoreboard-screen h2 {
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  color: white;
+  margin-bottom: 28px;
+}
+
+.scoreboard-anim {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 480px;
+  margin-bottom: 24px;
+}
+
+.leaderboard-entry {
+  display: grid;
+  grid-template-columns: 50px 1fr 120px;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  border: 4px solid white;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  text-align: left;
+  opacity: 0;
+  transform: translateX(-30px);
+  animation: slideInLeft 500ms ease forwards;
+}
+
+.leaderboard-entry.is-animating {
+  animation: slideInLeft 500ms ease forwards;
+}
+
+.entry-rank {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border: 3px solid white;
+  border-radius: 50%;
+  background: var(--orange);
+  font-family: "Archivo Black", Inter, sans-serif;
+  font-size: 1.8rem;
+  font-weight: 1000;
+  color: white;
+}
+
+.entry-info h3 {
+  margin: 0;
+  font-size: clamp(1.1rem, 2.4vw, 1.4rem);
+  color: white;
+  font-weight: 1000;
+}
+
+.entry-score {
+  margin: 4px 0 0;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 900;
+}
+
+.total-label {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.entry-points {
+  text-align: right;
+}
+
+.points-badge {
+  display: inline-block;
+  padding: 8px 14px;
+  border: 3px solid white;
+  border-radius: 50px;
+  background: var(--green);
+  font-family: "Archivo Black", Inter, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 1000;
+  color: white;
+  opacity: 0;
+  transform: scale(0.7);
+  animation: popIn 600ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+#continueToNext {
+  margin-top: 16px;
+}
+
 .final-screen {
   background:
     radial-gradient(circle at 50% 0, white 0 14%, transparent 15%),

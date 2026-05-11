@@ -276,6 +276,7 @@ function renderHost() {
   if (room.phase === "reveal") renderReveal();
   if (room.phase === "vote") renderVoteHost();
   if (room.phase === "event") renderEvent();
+  if (room.phase === "scoreboard" || room.phase === "scoreboard-wait") renderScoreboard();
   if (room.phase === "final") renderFinal();
 }
 
@@ -432,6 +433,71 @@ function renderEvent() {
     $("#nextRound").textContent = "Next Round";
   }
   burstConfetti(8);
+}
+
+function renderScoreboard() {
+  setPhase("scoreboard");
+  const lastWinner = client.room.winners[client.room.winners.length - 1];
+  const standings = standingsForRoom();
+  
+  $("#scoreboardTitle").textContent = lastWinner ? `${escapeHtml(lastWinner.playerName)} wins the round!` : "Points Awarded";
+  
+  // Build animated leaderboard
+  const animHtml = standings
+    .map((player, index) => {
+      const pointsEarned = lastWinner && lastWinner.playerId === player.id ? lastWinner.points : 0;
+      return `
+        <article class="leaderboard-entry" data-rank="${index + 1}" data-score="${player.score}">
+          <div class="entry-rank">${index + 1}</div>
+          <div class="entry-info">
+            <h3>${escapeHtml(player.name)}</h3>
+            <p class="entry-score"><span class="score-value">${player.score}</span> <span class="total-label">total</span></p>
+          </div>
+          <div class="entry-points">
+            ${pointsEarned > 0 ? `<span class="points-badge" data-points="${pointsEarned}">+${pointsEarned}</span>` : ''}
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+  
+  $("#scoreboardAnim").innerHTML = animHtml;
+  
+  // Animate the leaderboard entries
+  setTimeout(() => {
+    const entries = $$(".leaderboard-entry");
+    entries.forEach((entry, idx) => {
+      entry.style.animationDelay = `${idx * 150}ms`;
+      entry.classList.add("is-animating");
+      
+      const badge = entry.querySelector(".points-badge");
+      if (badge) {
+        const points = parseInt(badge.dataset.points);
+        badge.style.animationDelay = `${idx * 150 + 400}ms`;
+        // Animate score
+        const target = parseInt(entry.dataset.score);
+        const scoreValue = entry.querySelector(".score-value");
+        let current = Math.max(0, target - points);
+        const increment = Math.ceil(points / 30);
+        const counter = setInterval(() => {
+          current = Math.min(current + increment, target);
+          scoreValue.textContent = current;
+          if (current >= target) clearInterval(counter);
+        }, 30);
+      }
+    });
+  }, 100);
+  
+  const continueBtn = $("#continueToNext");
+  if (continueBtn) {
+    continueBtn.onclick = null;
+    continueBtn.addEventListener("click", () => hostAction("next"));
+    if (client.room.roundIndex + 1 >= client.room.roundCount) {
+      continueBtn.textContent = "See Final Results";
+    } else {
+      continueBtn.textContent = "Next Round";
+    }
+  }
 }
 
 function renderFinal() {
