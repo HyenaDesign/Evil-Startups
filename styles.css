@@ -281,36 +281,9 @@ button:active {
 }
 
 .host-mascot {
-  position: relative;
   width: min(38vw, 350px);
-  aspect-ratio: 1;
-  border: 6px solid var(--ink);
-  border-radius: 42% 58% 44% 56%;
-  background:
-    radial-gradient(circle at 34% 34%, white 0 12%, transparent 13%),
-    linear-gradient(135deg, var(--pink), var(--purple));
-  box-shadow: 14px 16px 0 var(--ink);
+  height: auto;
   animation: mascotBob 1800ms ease-in-out infinite;
-}
-
-.host-mascot::before,
-.host-mascot::after {
-  content: "";
-  position: absolute;
-  top: 34%;
-  width: 76px;
-  height: 76px;
-  border: 5px solid var(--ink);
-  border-radius: 50%;
-  background: white;
-}
-
-.host-mascot::before {
-  left: 22%;
-}
-
-.host-mascot::after {
-  right: 22%;
 }
 
 .eye {

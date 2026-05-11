@@ -847,7 +847,14 @@ function standingsForRoom() {
 
 function buildFinalStory(winner) {
   const best = client.room.winners.find((entry) => entry.playerId === winner?.id) || client.room.winners[0];
-  return `Tonight, ${winner?.name || "the room"} helped invent ${client.room.theme?.title?.toLowerCase() || "a suspicious business"} and somehow made "${best?.answer || "a suspicious dashboard"}" sound investable. Analysts predict one apology, two charts, and a mascot with a podcast.`;
+  let answerText = best?.answer || "a suspicious dashboard";
+  
+  // Handle drawing answers - show descriptive text instead of raw data URLs
+  if (String(answerText).startsWith("data:image")) {
+    answerText = "a terrible drawing";
+  }
+  
+  return `Tonight, ${winner?.name || "the room"} helped invent ${client.room.theme?.title?.toLowerCase() || "a suspicious business"} and somehow made "${answerText}" sound investable. Analysts predict one apology, two charts, and a mascot with a podcast.`;
 }
 
 function copyRecap() {
@@ -857,7 +864,13 @@ function copyRecap() {
     `Room: ${client.room.code}`,
     `Theme: ${client.room.theme?.title || "Unknown"}`,
     `Winner: ${standings[0]?.name || "Nobody"} (${standings[0]?.score || 0} points)`,
-    ...client.room.winners.map((winner) => `${winner.playerName} won ${winner.round} with "${winner.answer}".`),
+    ...client.room.winners.map((winner) => {
+      let answerText = winner.answer;
+      if (String(answerText).startsWith("data:image")) {
+        answerText = "a terrible drawing";
+      }
+      return `${winner.playerName} won ${winner.round} with "${answerText}".`;
+    }),
   ].join("\n");
   navigator.clipboard?.writeText(text).then(() => toast("Recap copied."));
 }

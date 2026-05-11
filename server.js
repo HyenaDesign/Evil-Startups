@@ -424,7 +424,14 @@ function botSubmitAll(room) {
   if (room.phase !== "challenge") return;
   const round = rounds[room.roundIndex];
   for (const player of activePlayers(room)) {
-    if (!room.submissions[player.id]) submit(room, player.id, pick(botAnswers[round.title] || round.fallback || ["BadCo"]));
+    if (!room.submissions[player.id]) {
+      // For drawing rounds, bots submit text descriptions instead of placeholder images
+      if (round.type === "draw") {
+        submit(room, player.id, pick(["A stick figure with ambition", "A logo that screams 'lawsuit'", "Corporate art that confuses investors", "A mascot eating money"]));
+      } else {
+        submit(room, player.id, pick(botAnswers[round.title] || round.fallback || ["BadCo"]));
+      }
+    }
   }
 }
 
