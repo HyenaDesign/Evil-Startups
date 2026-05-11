@@ -323,23 +323,29 @@ function openVote(room) {
 
   const submissionIds = Object.keys(room.submissions);
 
-  // Auto-vote for bots
   for (const player of room.players) {
     if (!player.bot) continue;
 
-    // Bots cannot vote for themselves
-    const validTargets = submissionIds.filter((id) => id !== player.id);
+    const validTargets = submissionIds.filter(
+      (id) => id !== player.id
+    );
 
     if (validTargets.length > 0) {
       room.votes[player.id] = pick(validTargets);
     }
   }
 
-  // If all votes already exist (all bots room), finish instantly
+  broadcast(room);
+
   const active = activePlayers(room);
 
-  if (Object.keys(room.votes).length >= active.length) {
+  const votedCount = active.filter(
+    (player) => room.votes[player.id]
+  ).length;
+
+  if (votedCount >= active.length) {
     finishVoting(room);
+    broadcast(room);
   }
 }
 
@@ -360,8 +366,10 @@ function vote(room, voterId, targetId) {
     (player) => room.votes[player.id]
   ).length;
 
+  // Everyone voted -> immediately finish and broadcast
   if (votedCount >= active.length) {
     finishVoting(room);
+    broadcast(room);
   }
 }
 
