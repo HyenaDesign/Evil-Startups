@@ -362,12 +362,16 @@ function vote(room, voterId, targetId) {
 
   const active = activePlayers(room);
 
-  const votedCount = active.filter(
-    (player) => room.votes[player.id]
-  ).length;
+  // Count only actual player votes
+  let playerVotes = 0;
 
-  // Everyone voted -> immediately finish and broadcast
-  if (votedCount >= active.length) {
+  for (const player of active) {
+    if (room.votes[player.id]) {
+      playerVotes += 1;
+    }
+  }
+
+  if (playerVotes >= active.length) {
     finishVoting(room);
     broadcast(room);
   }

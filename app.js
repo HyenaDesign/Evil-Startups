@@ -317,9 +317,12 @@ function renderVoteHost() {
     `,
     )
     .join("");
-  if (client.role !== "host") {
+  if (client.role === "host") {
     $$(".vote-card").forEach((card) =>
-      card.addEventListener("click", () => hostAction("vote", { voterId: `aud_${Date.now()}`, targetId: card.dataset.player })),
+      card.addEventListener("click", () => hostAction("vote", {
+  voterId: client.hostId,
+  targetId: card.dataset.player
+})),
     );
   }
 }
