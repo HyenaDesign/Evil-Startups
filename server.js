@@ -317,15 +317,52 @@ function finishRound(room) {
 
 function openVote(room) {
   if (room.phase !== "reveal") return;
+
   room.phase = "vote";
   room.votes = {};
+
+  const submissionIds = Object.keys(room.submissions);
+
+  // Auto-vote for bots
+  for (const player of room.players) {
+    if (!player.bot) continue;
+
+    // Bots cannot vote for themselves
+    const validTargets = submissionIds.filter((id) => id !== player.id);
+
+    if (validTargets.length > 0) {
+      room.votes[player.id] = pick(validTargets);
+    }
+  }
+
+  // If all votes already exist (all bots room), finish instantly
+  const active = activePlayers(room);
+
+  if (Object.keys(room.votes).length >= active.length) {
+    finishVoting(room);
+  }
 }
 
 function vote(room, voterId, targetId) {
-  if (room.phase !== "vote" || !room.submissions[targetId] || voterId === targetId) return;
+  if (
+    room.phase !== "vote" ||
+    !room.submissions[targetId] ||
+    voterId === targetId
+  ) {
+    return;
+  }
+
   room.votes[voterId] = targetId;
+
   const active = activePlayers(room);
-  if (Object.keys(room.votes).length >= Math.max(1, active.length)) finishVoting(room);
+
+  const votedCount = active.filter(
+    (player) => room.votes[player.id]
+  ).length;
+
+  if (votedCount >= active.length) {
+    finishVoting(room);
+  }
 }
 
 function finishVoting(room) {

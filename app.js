@@ -425,6 +425,22 @@ function renderController() {
     return;
   }
 
+if (room.phase === "reveal" && client.playerId === client.hostId) {
+  $("#controllerStatus").textContent = "Open voting when everyone has seen the answers.";
+
+  $("#controllerMount").innerHTML = `
+    <div class="controller-actions">
+      <button id="openVoting" class="mega-button" type="button">
+        Open Voting
+      </button>
+    </div>
+  `;
+
+  $("#openVoting").addEventListener("click", () => hostAction("openVote"));
+
+  return;
+}
+
   $("#controllerStatus").textContent = controllerStatusFor(room.phase);
   $("#controllerMount").innerHTML = `<div class="controller-wait">${escapeHtml(controllerStatusFor(room.phase))}</div>`;
 }
