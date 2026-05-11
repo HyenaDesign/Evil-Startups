@@ -16,6 +16,8 @@ const client = {
   lastPhase: "",
   networkError: false,
   timeWarningPlayed: false,
+  legalWarningPlayed: false,
+  roundStartPlayed: false,
 };
 
 const marketBits = [
@@ -36,17 +38,21 @@ const audienceReactions = [
   "Stock inexplicably up",
 ];
 
-// Preload key audio files to reduce lag on first play
-const PRELOAD_AUDIO = [
-  "welcome.mp3",
-  "end_of_round.mp3",
-  "end_of_round2.mp3",
-  "end_of_round3.mp3",
-  "end_of_last_round.mp3",
-  "legal_warnings.mp3",
-  "times_almost_up.mp3",
-  "times_almost_up2.mp3",
-];
+// ─── Sound bank ────────────────────────────────────────────────────────────────
+// To add new sounds, just drop the filename into the right array.
+// pick() will randomise which one plays each time.
+const SOUNDS = {
+  roundStart:   ["round_start.mp3"],
+  roundEnd:     ["end_of_round.mp3", "end_of_round2.mp3", "end_of_round3.mp3"],
+  lastRoundEnd: ["end_of_last_round.mp3"],
+  legalWarning: ["legal_warnings.mp3"],
+  timeWarning:  ["times_almost_up.mp3", "times_almost_up2.mp3"],
+  welcome:      ["welcome.mp3"],
+};
+
+// Flat list for preloading — auto-derived from the sound bank above
+const PRELOAD_AUDIO = Object.values(SOUNDS).flat();
+// ───────────────────────────────────────────────────────────────────────────────
 
 function preloadAudio() {
   PRELOAD_AUDIO.forEach((filename) => {
@@ -213,6 +219,8 @@ function render() {
     if (client.room.phase === "challenge") {
       client.voted = false;
       client.timeWarningPlayed = false;
+      client.legalWarningPlayed = false;
+      client.roundStartPlayed = false;
       if (client.mode === "table") client.tableTurn = 0;
     }
     if (client.room.phase === "vote") client.voted = false;
@@ -259,7 +267,7 @@ function renderPlayers() {
 function renderIntro() {
   setPhase("intro");
   $("#introHeadline").textContent = `${client.room.players.length} founders joined. The host is legally excited.`;
-  playAudio("welcome.mp3");
+  playAudio(pick(SOUNDS.welcome));
 }
 
 function renderTheme() {
@@ -313,6 +321,10 @@ function renderChallengeHost() {
     ? "One founder remains. The timer is now politely threatening them."
     : "Players are submitting privately. The reveal is where the damage happens.";
   renderPlayerStatus();
+  if (!client.roundStartPlayed) {
+    playAudio(pick(SOUNDS.roundStart));
+    client.roundStartPlayed = true;
+  }
   startCountdown();
 }
 
@@ -344,19 +356,10 @@ function renderReveal() {
     .join("");
   burstConfetti(10);
 
-  // FIX: Chain legal_warnings.mp3 to play after the round-end clip finishes,
-  // instead of both firing simultaneously.
   const isLastRound = client.room.roundIndex + 1 >= client.room.roundCount;
-  const roundClip = isLastRound
-    ? "end_of_last_round.mp3"
-    : pick(["end_of_round.mp3", "end_of_round2.mp3", "end_of_round3.mp3"]);
-
+  const roundClip = isLastRound ? pick(SOUNDS.lastRoundEnd) : pick(SOUNDS.roundEnd);
   const first = playAudio(roundClip);
-  if (first) {
-    first.addEventListener("ended", () => playAudio("legal_warnings.mp3"));
-  } else {
-    // Sound is off or audio failed — nothing to chain
-  }
+  // legal_warnings already played mid-round; nothing to chain here
 }
 
 function renderVoteHost() {
@@ -708,13 +711,20 @@ function updateCountdown() {
   if (!client.room?.roundEndsAt) return;
   const seconds = Math.max(0, Math.ceil((client.room.roundEndsAt - Date.now()) / 1000));
   const total = Math.max(1, client.room.currentRound.seconds);
+  const ratio = seconds / total;
   $("#timerText").textContent = seconds;
-  $("#timerArc").style.strokeDashoffset = String(327 - 327 * Math.min(1, seconds / total));
+  $("#timerArc").style.strokeDashoffset = String(327 - 327 * Math.min(1, ratio));
+
+  // Legal warning fires once around the halfway point while the round is still active
+  if (ratio <= 0.5 && seconds > 5 && !client.legalWarningPlayed) {
+    playAudio(pick(SOUNDS.legalWarning));
+    client.legalWarningPlayed = true;
+  }
+
   if (seconds <= 5 && seconds > 0) {
     playBeep(340 + (6 - seconds) * 65, 0.025);
     if (!client.timeWarningPlayed) {
-      const warningAudios = ["times_almost_up.mp3", "times_almost_up2.mp3"];
-      playAudio(pick(warningAudios));
+      playAudio(pick(SOUNDS.timeWarning));
       client.timeWarningPlayed = true;
     }
   }
