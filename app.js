@@ -530,28 +530,59 @@ function renderControllerChallenge(round) {
     });
     return;
   }
-  if (round.type === "draw") {
-    $("#drawCanvas").style.display = "block";
-    $("#controllerMount").innerHTML = `
-      <div class="controller-actions">
-        <button id="clearCanvas" class="secondary-button" type="button">Clear</button>
-        <button id="submitDrawing" class="mega-button" type="button">Submit Drawing</button>
-      </div>
-    `;
-    initDrawing();
-    $("#clearCanvas").addEventListener("click", () => {
-      const canvas = $("#drawCanvas");
-      const ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    });
-    $("#submitDrawing").addEventListener("click", () => {
-      const canvas = $("#drawCanvas");
-      const answer = canvas.toDataURL();
-      playerAction("submit", { answer });
-    });
-    return;
-  }
-  $("#drawCanvas").style.display = "none";
+if (round.type === "draw") {
+  $("#controllerMount").innerHTML = `
+    <div class="controller-actions">
+      <canvas
+        id="drawCanvas"
+        width="320"
+        height="320"
+        style="
+          width: 100%;
+          max-width: 320px;
+          height: 320px;
+          background: white;
+          border-radius: 18px;
+          border: 3px solid rgba(0,0,0,0.15);
+          touch-action: none;
+          display: block;
+          margin: 0 auto 16px;
+        "
+      ></canvas>
+
+      <button id="clearCanvas" class="secondary-button" type="button">
+        Clear
+      </button>
+
+      <button id="submitDrawing" class="mega-button" type="button">
+        Submit Drawing
+      </button>
+    </div>
+  `;
+
+  initDrawing();
+
+  $("#clearCanvas").addEventListener("click", () => {
+    const canvas = $("#drawCanvas");
+    const ctx = canvas.getContext("2d");
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  });
+
+  $("#submitDrawing").addEventListener("click", () => {
+    const canvas = $("#drawCanvas");
+    const answer = canvas.toDataURL();
+
+    playerAction("submit", { answer });
+  });
+
+  return;
+}
+  const drawCanvas = $("#drawCanvas");
+
+if (drawCanvas) {
+  drawCanvas.style.display = "none";
+}
   $("#controllerMount").innerHTML = `
     <div class="controller-actions">
       <textarea id="controllerAnswer" rows="4" placeholder="${escapeHtml(round.placeholder || "Type your answer")}"></textarea>
