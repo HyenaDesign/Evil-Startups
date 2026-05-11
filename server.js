@@ -195,7 +195,7 @@ function getRoom(code) {
 
 function publicRoom(room) {
   const currentRound = rounds[room.roundIndex] || null;
-  const revealVisible = ["reveal", "vote", "event", "scoreboard", "scoreboard-wait", "final"].includes(room.phase);
+  const revealVisible = ["reveal", "vote", "event", "final"].includes(room.phase);
   return {
     code: room.code,
     hostId: room.hostId,
@@ -400,19 +400,10 @@ function finishVoting(room) {
   room.winners.push({ playerId: winnerId, playerName: submission.playerName, answer: submission.answer, round: rounds[room.roundIndex].title, points });
   room.event = pick(events);
   room.phase = "event";
-  schedule(room, 2800, () => showScoreboard(room));
-}
-
-function showScoreboard(room) {
-  if (room.phase !== "event") return;
-  room.phase = "scoreboard";
-  schedule(room, 5000, () => {
-    room.phase = "scoreboard-wait";
-  });
 }
 
 function nextRound(room) {
-  if (!["scoreboard", "scoreboard-wait", "event"].includes(room.phase)) return;
+  if (room.phase !== "event") return;
   room.roundIndex += 1;
   if (room.roundIndex >= rounds.length) finishGame(room);
   else beginRound(room);
