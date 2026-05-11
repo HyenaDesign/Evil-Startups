@@ -195,7 +195,7 @@ function getRoom(code) {
 
 function publicRoom(room) {
   const currentRound = rounds[room.roundIndex] || null;
-  const revealVisible = ["reveal", "vote", "event", "final"].includes(room.phase);
+  const revealVisible = ["reveal", "vote", "leaderboard", "event", "final"].includes(room.phase);
   return {
     code: room.code,
     hostId: room.hostId,
@@ -213,6 +213,7 @@ function publicRoom(room) {
     winners: room.winners,
     event: room.event,
     scores: room.scores,
+    scoresBeforeRound: room.scoresBeforeRound || {},
   };
 }
 
@@ -338,28 +339,19 @@ function openVote(room) {
 
   for (const player of room.players) {
     if (!player.bot) continue;
-
-    const validTargets = submissionIds.filter(
-      (id) => id !== player.id
-    );
-
+    const validTargets = submissionIds.filter((id) => id !== player.id);
     if (validTargets.length > 0) {
       room.votes[player.id] = pick(validTargets);
     }
   }
 
-  broadcast(room);
-
+  // Check if bots already filled all votes (e.g. all-bot game)
   const active = activePlayers(room);
-
-  const votedCount = active.filter(
-    (player) => room.votes[player.id]
-  ).length;
-
+  const votedCount = active.filter((player) => room.votes[player.id]).length;
   if (votedCount >= active.length) {
     finishVoting(room);
-    broadcast(room);
   }
+  // Caller (handleApi) broadcasts once after this returns
 }
 
 function vote(room, voterId, targetId) {
@@ -374,32 +366,49 @@ function vote(room, voterId, targetId) {
   room.votes[voterId] = targetId;
 
   const active = activePlayers(room);
-
-  // Count only actual player votes
-  let playerVotes = 0;
-
-  for (const player of active) {
-    if (room.votes[player.id]) {
-      playerVotes += 1;
-    }
-  }
+  const playerVotes = active.filter((player) => room.votes[player.id]).length;
 
   if (playerVotes >= active.length) {
     finishVoting(room);
-    broadcast(room);
   }
+  // Caller broadcasts once after this returns
 }
 
 function finishVoting(room) {
+  // Tally only votes whose targets actually have submissions
   const counts = {};
-  for (const target of Object.values(room.votes)) counts[target] = (counts[target] || 0) + 1;
-  const winnerId = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || Object.keys(room.submissions)[0];
+  for (const target of Object.values(room.votes)) {
+    if (room.submissions[target]) counts[target] = (counts[target] || 0) + 1;
+  }
+
+  // Stable winner: most votes; tie-break by submission order (first submitted wins)
+  const submissionOrder = Object.keys(room.submissions);
+  const winnerId = submissionOrder.reduce((best, id) => {
+    const c = counts[id] || 0;
+    const bestC = counts[best] || 0;
+    return c > bestC ? id : best;
+  }, submissionOrder[0]);
+
   const submission = room.submissions[winnerId];
-  const points = 120 + room.roundIndex * 30 + (counts[winnerId] || 0) * 25;
+  const voteCount = counts[winnerId] || 0;
+  // Base points scale with round depth; +30 per vote received (no random bonus)
+  const points = 100 + room.roundIndex * 25 + voteCount * 30;
+
+  // Snapshot scores BEFORE applying so leaderboard can animate deltas
+  room.scoresBeforeRound = { ...room.scores };
+
   room.scores[winnerId] = (room.scores[winnerId] || 0) + points;
-  room.winners.push({ playerId: winnerId, playerName: submission.playerName, answer: submission.answer, round: rounds[room.roundIndex].title, points });
+  room.winners.push({
+    playerId: winnerId,
+    playerName: submission.playerName,
+    answer: submission.answer,
+    round: rounds[room.roundIndex].title,
+    points,
+    votes: voteCount,
+  });
   room.event = pick(events);
-  room.phase = "event";
+  // Transition to animated leaderboard before the event beat
+  room.phase = "leaderboard";
 }
 
 function nextRound(room) {
@@ -407,6 +416,11 @@ function nextRound(room) {
   room.roundIndex += 1;
   if (room.roundIndex >= rounds.length) finishGame(room);
   else beginRound(room);
+}
+
+function advanceFromLeaderboard(room) {
+  if (room.phase !== "leaderboard") return;
+  room.phase = "event";
 }
 
 function finishGame(room) {
@@ -499,6 +513,7 @@ async function handleApi(req, res, pathname) {
       const body = await readJson(req);
       const isPlayerHost = body.clientId === room.hostId;
       const isScreenHost = body.clientId && body.clientId.startsWith("host");
+      if (body.type === "leaderboardNext" && isPlayerHost) advanceFromLeaderboard(room);
       if (body.type === "start" && isPlayerHost) startShow(room);
       if (body.type === "submit") submit(room, body.playerId, body.answer);
       if (body.type === "openVote" && isPlayerHost) openVote(room);
@@ -510,6 +525,7 @@ async function handleApi(req, res, pathname) {
         room.submissions = {};
         room.votes = {};
         room.winners = [];
+        room.scoresBeforeRound = {};
         room.roundEndsAt = null;
         clearTimeout(room.timer);
       }
@@ -524,6 +540,7 @@ async function handleApi(req, res, pathname) {
         if (room.phase === "challenge") finishRound(room);
         else if (room.phase === "reveal") openVote(room);
         else if (room.phase === "vote") finishVoting(room);
+        else if (room.phase === "leaderboard") advanceFromLeaderboard(room);
         else if (room.phase === "event") nextRound(room);
       }
       if (body.type === "disconnectOne" && (isPlayerHost || isScreenHost)) {

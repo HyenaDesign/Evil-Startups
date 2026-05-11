@@ -207,6 +207,7 @@ function bindHostControls() {
     }
   });
   $("#continueToVote").addEventListener("click", () => hostAction("openVote"));
+  $("#continueToEvent").addEventListener("click", () => hostAction("leaderboardNext"));
   $("#nextRound").addEventListener("click", () => hostAction("next"));
   $("#playAgain").addEventListener("click", () => hostAction("reset"));
   $("#copyRecap").addEventListener("click", copyRecap);
@@ -252,10 +253,14 @@ function render() {
     if (client.room.phase === "challenge") {
       client.voted = false;
       client.timeWarningPlayed = false;
+      client.legalWarningPlayed = false;
       client.roundStartPlayed = false;
       if (client.mode === "table") client.tableTurn = 0;
     }
     if (client.room.phase === "vote") client.voted = false;
+    if (client.room.phase === "leaderboard") {
+      client.leaderboardAnimated = false;
+    }
     client.lastPhase = client.room.phase;
   }
   $("#roomCode").textContent = client.room.code;
@@ -275,6 +280,7 @@ function renderHost() {
   if (room.phase === "challenge") renderChallengeHost();
   if (room.phase === "reveal") renderReveal();
   if (room.phase === "vote") renderVoteHost();
+  if (room.phase === "leaderboard") renderLeaderboard();
   if (room.phase === "event") renderEvent();
   if (room.phase === "final") renderFinal();
 }
@@ -422,6 +428,109 @@ function renderVoteHost() {
   }
 }
 
+function renderLeaderboard() {
+  setPhase("leaderboard");
+  const room = client.room;
+  const prevScores = room.scoresBeforeRound || {};
+  const latestWinner = room.winners[room.winners.length - 1];
+  const isLastRound = room.roundIndex + 1 >= room.roundCount;
+
+  // Build standings using CURRENT scores (after round points applied)
+  const standings = [...room.players]
+    .map((p) => ({
+      ...p,
+      score: room.scores[p.id] || 0,
+      prevScore: prevScores[p.id] || 0,
+      gained: (room.scores[p.id] || 0) - (prevScores[p.id] || 0),
+    }))
+    .sort((a, b) => b.score - a.score);
+
+  // Compute rank change vs previous-round ordering
+  const prevRanking = [...room.players]
+    .map((p) => ({ id: p.id, score: prevScores[p.id] || 0 }))
+    .sort((a, b) => b.score - a.score)
+    .map((p) => p.id);
+
+  const currentRanking = standings.map((p) => p.id);
+
+  const rankChange = {};
+  currentRanking.forEach((id, idx) => {
+    const prev = prevRanking.indexOf(id);
+    rankChange[id] = prev - idx; // positive = climbed
+  });
+
+  const biggestClimber = standings.reduce((best, p) => {
+    return rankChange[p.id] > (rankChange[best?.id] || 0) ? p : best;
+  }, null);
+
+  const leader = standings[0];
+
+  $("#leaderboardRoundLabel").textContent = `Round ${room.roundIndex + 1} of ${room.roundCount} — Results`;
+  $("#leaderboardWinnerLine").textContent = latestWinner
+    ? `🏆 ${escapeHtml(latestWinner.playerName)} wins the round (+${latestWinner.points} pts, ${latestWinner.votes} vote${latestWinner.votes !== 1 ? "s" : ""})`
+    : "";
+  $("#continueToEvent").textContent = isLastRound ? "See Final Results" : "Next Round";
+
+  const rows = standings
+    .map((entry, idx) => {
+      const isWinner = entry.id === latestWinner?.playerId;
+      const isLeader = entry.id === leader?.id;
+      const climbed = rankChange[entry.id] > 0;
+      const dropped = rankChange[entry.id] < 0;
+      const isBigClimber = biggestClimber && entry.id === biggestClimber.id && rankChange[entry.id] > 0;
+      const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}.`;
+      const arrow = climbed ? "↑" : dropped ? "↓" : "—";
+      const arrowClass = climbed ? "lb-arrow-up" : dropped ? "lb-arrow-down" : "lb-arrow-flat";
+      const gainedHtml = entry.gained > 0
+        ? `<span class="lb-gained">+${entry.gained}</span>`
+        : "";
+      const badgeHtml = [
+        isWinner ? `<span class="lb-badge lb-badge-winner">Round Win</span>` : "",
+        isLeader && standings.length > 1 ? `<span class="lb-badge lb-badge-leader">Leader</span>` : "",
+        isBigClimber ? `<span class="lb-badge lb-badge-climb">📈 Big Climb</span>` : "",
+      ].join("");
+
+      return `
+        <div class="lb-row ${isWinner ? "lb-row-winner" : ""}" data-id="${escapeHtml(entry.id)}" style="animation-delay:${idx * 120}ms">
+          <span class="lb-medal">${medal}</span>
+          <span class="lb-name">${escapeHtml(entry.name)}${entry.bot ? " <em>BOT</em>" : ""}</span>
+          <span class="lb-badges">${badgeHtml}</span>
+          <span class="lb-score-wrap">
+            <span class="lb-score" data-target="${entry.score}" data-from="${entry.prevScore}">${entry.prevScore}</span>
+            ${gainedHtml}
+          </span>
+          <span class="${arrowClass}">${arrow}</span>
+        </div>`;
+    })
+    .join("");
+
+  $("#leaderboardRows").innerHTML = rows;
+
+  // Animate score counting up (only run once per phase entry)
+  if (!client.leaderboardAnimated) {
+    client.leaderboardAnimated = true;
+    burstConfetti(latestWinner ? 16 : 6);
+    setTimeout(() => {
+      $$(".lb-score").forEach((el) => {
+        const from = parseInt(el.dataset.from, 10);
+        const to = parseInt(el.dataset.target, 10);
+        if (from === to) return;
+        const duration = 900;
+        const start = performance.now();
+        function step(now) {
+          const elapsed = now - start;
+          const progress = Math.min(elapsed / duration, 1);
+          // Ease-out cubic
+          const eased = 1 - Math.pow(1 - progress, 3);
+          el.textContent = Math.round(from + (to - from) * eased);
+          if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      });
+    }, 300);
+  }
+}
+
 function renderEvent() {
   setPhase("event");
   $("#eventTitle").textContent = client.room.event?.title || "Breaking News";
@@ -433,6 +542,7 @@ function renderEvent() {
   }
   burstConfetti(8);
 }
+
 
 function renderFinal() {
   setPhase("final");
@@ -546,16 +656,25 @@ if (room.phase === "reveal" && client.playerId === client.hostId) {
 function initDrawing() {
   const canvas = $("#drawCanvas");
   const ctx = canvas.getContext("2d");
-  
-  // Match canvas display size with drawing resolution
-  const rect = canvas.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = Math.ceil(rect.width * dpr);
-  canvas.height = Math.ceil(rect.height * dpr);
-  ctx.scale(dpr, dpr);
-  
-  ctx.lineWidth = 3;
+
+  // Defer sizing until after the browser has laid out the canvas so
+  // getBoundingClientRect() returns real dimensions instead of 0×0.
+  requestAnimationFrame(() => {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const displayW = Math.max(rect.width, 280);
+    const displayH = Math.max(rect.height, 280);
+    canvas.width = Math.ceil(displayW * dpr);
+    canvas.height = Math.ceil(displayH * dpr);
+    ctx.scale(dpr, dpr);
+    // Fill white so JPEG export has no transparent (black) pixels
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, displayW, displayH);
+  });
+
+  ctx.lineWidth = 4;
   ctx.lineCap = "round";
+  ctx.lineJoin = "round";
   ctx.strokeStyle = "#000";
   let drawing = false;
   let lastX = 0;
@@ -664,18 +783,30 @@ if (round.type === "draw") {
   $("#clearCanvas").addEventListener("click", () => {
     const canvas = $("#drawCanvas");
     const ctx = canvas.getContext("2d");
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   });
 
   $("#submitDrawing").addEventListener("click", () => {
+    const btn = $("#submitDrawing");
+    if (btn.dataset.submitting === "true") return;
     const canvas = $("#drawCanvas");
-    const answer = canvas.toDataURL(
-  "image/jpeg",
-  0.7
-);
-
-    playerAction("submit", { answer });
+    const ctx = canvas.getContext("2d");
+    // Composite drawing onto a white background so JPEG has no transparent (black) pixels
+    const offscreen = document.createElement("canvas");
+    offscreen.width = canvas.width;
+    offscreen.height = canvas.height;
+    const offCtx = offscreen.getContext("2d");
+    offCtx.fillStyle = "#ffffff";
+    offCtx.fillRect(0, 0, offscreen.width, offscreen.height);
+    offCtx.drawImage(canvas, 0, 0);
+    const answer = offscreen.toDataURL("image/jpeg", 0.75);
+    btn.dataset.submitting = "true";
+    btn.disabled = true;
+    playerAction("submit", { answer }).finally(() => {
+      btn.dataset.submitting = "false";
+      btn.disabled = false;
+    });
   });
 
   return;
@@ -958,6 +1089,7 @@ function controllerStatusFor(phase) {
     intro: "Show starting. Look at the host screen.",
     theme: "Theme reveal. Prepare a terrible idea.",
     reveal: "Your answer is on the big screen.",
+    leaderboard: "Scores are in. Look at the host screen.",
     event: "Breaking news. The host is making it worse.",
     final: "Game over. Someone has fake shareholder value.",
   }[phase] || "Waiting for host...";

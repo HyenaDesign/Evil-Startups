@@ -1089,6 +1089,146 @@ button:active {
   text-align: left;
 }
 
+/* ─── Leaderboard Screen ────────────────────────────────────────────────────── */
+
+.leaderboard-screen {
+  align-content: start;
+  gap: 0;
+  padding: clamp(16px, 3vw, 36px);
+  background:
+    radial-gradient(circle at 80% 10%, rgba(59,183,255,0.35), transparent 28%),
+    linear-gradient(135deg, #151019 0%, #2d1f40 100%);
+  color: white;
+  overflow-y: auto;
+}
+
+.leaderboard-screen .kicker {
+  color: rgba(255,255,255,0.65);
+}
+
+.lb-winner-headline {
+  font-size: clamp(1.1rem, 2.6vw, 2rem);
+  color: var(--yellow);
+  margin-bottom: 18px;
+  text-transform: none;
+  line-height: 1.1;
+}
+
+.lb-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.lb-row {
+  display: grid;
+  grid-template-columns: 44px 1fr auto auto 40px;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 14px 18px;
+  border: 3px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  background: rgba(255,255,255,0.07);
+  animation: lbSlideIn 450ms cubic-bezier(0.2,1.2,0.2,1) both;
+  transition: background 300ms;
+}
+
+.lb-row-winner {
+  border-color: var(--yellow);
+  background: rgba(255,225,86,0.13);
+}
+
+@keyframes lbSlideIn {
+  from { opacity: 0; transform: translateX(-32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.lb-medal {
+  font-size: 1.6rem;
+  text-align: center;
+  line-height: 1;
+}
+
+.lb-name {
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-weight: 900;
+  color: white;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lb-name em {
+  font-style: normal;
+  font-size: 0.7em;
+  opacity: 0.55;
+  font-weight: 700;
+}
+
+.lb-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.lb-badge {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 1000;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.lb-badge-winner { background: var(--yellow); color: var(--ink); }
+.lb-badge-leader { background: var(--green); color: var(--ink); }
+.lb-badge-climb  { background: var(--blue);  color: var(--ink); }
+
+.lb-score-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.lb-score {
+  font-family: "Archivo Black", Inter, sans-serif;
+  font-size: clamp(1.3rem, 2.5vw, 2rem);
+  color: white;
+  min-width: 3ch;
+  text-align: right;
+}
+
+.lb-gained {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--green);
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 1000;
+  animation: lbGainedPop 500ms 400ms cubic-bezier(0.2,1.4,0.3,1) both;
+}
+
+@keyframes lbGainedPop {
+  from { opacity: 0; transform: scale(0.5); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.lb-arrow-up   { color: var(--green); font-size: 1.4rem; font-weight: 900; text-align: center; }
+.lb-arrow-down { color: var(--red);   font-size: 1.4rem; font-weight: 900; text-align: center; }
+.lb-arrow-flat { color: rgba(255,255,255,0.3); font-size: 1.1rem; text-align: center; }
+
+.lb-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 6px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+
 .toast {
   position: fixed;
   right: 18px;
