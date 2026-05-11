@@ -44,7 +44,7 @@ const audienceReactions = [
 // pick() will randomise which one plays each time.
 const SOUNDS = {
   roundStart:   ["round_start.mp3"],
-  roundEnd:     ["end_of_round.mp3", "end_of_round2.mp3", "end_of_round3.mp3", "endofround4.mp3", "endofround5.mp3", "endofround6.mp3", "endofround7.mp3", "endofround8.mp3"],
+  roundEnd:     ["end_of_round.mp3", "end_of_round2.mp3", "end_of_round3.mp3", "endofround4.mp3", "endofround5.mp3", "endofround6.mp3", "endofround7.mp3", "endofround8.mp3", "endofround9.mp3", "endofround10.mp3", "endofround11.mp3", "endofround12.mp3", "endofround13.mp3", "endofround14.mp3", "endofround15.mp3", "endofround16.mp3"],
   lastRoundEnd: ["end_of_last_round.mp3"],
   legalWarning: ["legal_warnings.mp3"],
   timeWarning:  ["times_almost_up.mp3", "times_almost_up2.mp3"],
@@ -701,7 +701,6 @@ if (drawCanvas) {
     if (!answer) return toast("Give the host something to roast.");
     submitBtn.dataset.submitting = "true";
     submitBtn.disabled = true;
-    answerInput.blur();
     playerAction("submit", { answer }).finally(() => {
       submitBtn.dataset.submitting = "false";
       submitBtn.disabled = false;

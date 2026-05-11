@@ -44,14 +44,14 @@ const rounds = [
   },
   {
     type: "text",
-    title: "PR Disaster Sprint",
-    prompt: "Respond to the scandal in one sentence.",
+    title: "Worst Feature Ever",
+    prompt: "Describe the most dangerous feature of your company.",
     seconds: 38,
-    placeholder: "Ex: We regret that users experienced involuntary loyalty.",
+    placeholder: "Ex: Our AI learns from your nightmares",
     fallback: [
-      "We apologize for accidentally creating a small economy of fear.",
-      "Our mascot's opinions do not represent the board, usually.",
-      "We remain committed to transparency after deleting the dashboard.",
+      "Mandatory crying breaks for engagement metrics",
+      "The app that sells your dreams to competitors",
+      "Required personal debt to unlock free tier",
     ],
   },
   {
@@ -103,10 +103,10 @@ const events = [
 const botAnswers = {
   "Name Rush": ["Regretify Junior", "OxyRent", "NapRank Ultra", "GuiltShake Plus"],
   "Buzzword Blender": ["premium oxygen flywheel", "AI-powered regret cult", "family-safe homework dashboard"],
-  "PR Disaster Sprint": [
-    "We regret that customers interpreted our loyalty program as legally binding.",
-    "The mascot acted alone, except for the roadmap.",
-    "We are pausing harm until the next funding round.",
+  "Worst Feature Ever": [
+    "Mandatory ad-watching during sleep mode",
+    "The subscription that breeds like rabbits",
+    "AI that makes worse decisions than humans",
   ],
   "Logo Drawing": [
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",

@@ -524,6 +524,9 @@ button:active {
 .controller-screen {
   place-items: center;
   padding: clamp(16px, 4vw, 44px);
+  padding-left: calc(clamp(16px, 4vw, 44px) + env(safe-area-inset-left, 0px));
+  padding-right: calc(clamp(16px, 4vw, 44px) + env(safe-area-inset-right, 0px));
+  padding-bottom: calc(clamp(16px, 4vw, 44px) + env(safe-area-inset-bottom, 0px));
   background: linear-gradient(135deg, var(--paper), #dffcff);
 }
 
@@ -879,8 +882,12 @@ button:active {
 .reveal-screen {
   align-content: center;
   padding: clamp(18px, 4vw, 44px);
+  padding-left: calc(clamp(18px, 4vw, 44px) + env(safe-area-inset-left, 0px));
+  padding-right: calc(clamp(18px, 4vw, 44px) + env(safe-area-inset-right, 0px));
+  padding-bottom: calc(clamp(18px, 4vw, 44px) + env(safe-area-inset-bottom, 0px));
   background: linear-gradient(135deg, var(--blue), #baf7ff);
   text-align: center;
+  overflow: hidden;
 }
 
 .reveal-cards,
@@ -905,6 +912,7 @@ button:active {
   box-shadow: 9px 9px 0 var(--ink);
   text-align: left;
   animation: cardFlip 420ms ease both;
+  overflow: hidden;
 }
 
 .reveal-card::before,
@@ -944,10 +952,20 @@ button:active {
 .reveal-card p,
 .vote-card p {
   margin-bottom: 0;
+  margin-top: 0;
   font-family: "Archivo Black", Inter, sans-serif;
   font-size: clamp(1.25rem, 2.4vw, 2.05rem);
   line-height: 1;
   text-transform: uppercase;
+  overflow-wrap: break-word;
+}
+
+.reveal-card img,
+.vote-card img,
+.choice-card img {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
   overflow-wrap: anywhere;
 }
 
@@ -990,8 +1008,12 @@ button:active {
 .vote-screen {
   align-content: center;
   padding: clamp(18px, 4vw, 44px);
+  padding-left: calc(clamp(18px, 4vw, 44px) + env(safe-area-inset-left, 0px));
+  padding-right: calc(clamp(18px, 4vw, 44px) + env(safe-area-inset-right, 0px));
+  padding-bottom: calc(clamp(18px, 4vw, 44px) + env(safe-area-inset-bottom, 0px));
   background: linear-gradient(135deg, var(--pink), var(--yellow));
   text-align: center;
+  overflow: hidden;
 }
 
 .vote-card {
